@@ -109,12 +109,22 @@ impl<T: AttrValue> Decode for AttrDecoder<T> {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct AttrEncoder<T: AttrValue> {
     attr_type: U16beEncoder,
     value_len: U16beEncoder,
     value: T::Encoder,
     padding: BytesEncoder<Padding>,
+}
+impl<T: AttrValue> Default for AttrEncoder<T> {
+    fn default() -> Self {
+        AttrEncoder {
+            attr_type: Default::default(),
+            value_len: Default::default(),
+            value: Default::default(),
+            padding: Default::default(),
+        }
+    }
 }
 impl<T: AttrValue> Encode for AttrEncoder<T> {
     type Item = Attr<T>;
@@ -165,10 +175,11 @@ pub trait AttrValueDecode: Decode {
 }
 
 pub trait AttrValue: Sized {
-    type Decoder: AttrValueDecode<Item = Self>;
-    type Encoder: SizedEncode<Item = Self>;
+    type Decoder: AttrValueDecode<Item = Self> + Default;
+    type Encoder: SizedEncode<Item = Self> + Default;
 
     fn attr_type(&self) -> AttrType;
+    // TODO: fn validate()
 }
 
 #[derive(Debug, Default, Clone)]

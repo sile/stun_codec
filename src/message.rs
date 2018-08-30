@@ -6,6 +6,7 @@ use std::marker::PhantomData;
 use std::vec;
 
 use attribute::{Attr, AttrDecoder, AttrEncoder, AttrValue};
+use types::{TransactionId, U12};
 
 /// The magic cookie value.
 ///
@@ -26,8 +27,6 @@ pub trait Method: Sized {
     fn as_u12(&self) -> U12;
     fn from_u12(method: U12) -> Result<Self>;
 }
-
-pub type TransactionId = [u8; 12];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Class {
@@ -167,7 +166,6 @@ impl<M: Method, A: AttrValue> Decode for MessageDecoder<M, A> {
     }
 }
 
-// #[derive(Debug, Default)]
 pub struct MessageEncoder<M: Method, A: AttrValue> {
     message_type: U16beEncoder,
     message_len: U16beEncoder,
@@ -175,6 +173,18 @@ pub struct MessageEncoder<M: Method, A: AttrValue> {
     transaction_id: BytesEncoder<TransactionId>,
     attributes: PreEncode<Repeat<AttrEncoder<A>, vec::IntoIter<Attr<A>>>>,
     _phantom: PhantomData<M>,
+}
+impl<M: Method, A: AttrValue> Default for MessageEncoder<M, A> {
+    fn default() -> Self {
+        MessageEncoder {
+            message_type: Default::default(),
+            message_len: Default::default(),
+            magic_cookie: Default::default(),
+            transaction_id: Default::default(),
+            attributes: Default::default(),
+            _phantom: Default::default(),
+        }
+    }
 }
 impl<M: Method, A: AttrValue> Encode for MessageEncoder<M, A> {
     type Item = Message<M, A>;
@@ -259,31 +269,5 @@ impl Type {
             class: class,
             method: method,
         })
-    }
-}
-
-/// Unsigned 12 bit integer.
-#[derive(Debug, Default, Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash)]
-pub struct U12(u16);
-impl U12 {
-    /// Converts from `u8` value.
-    pub fn from_u8(value: u8) -> Self {
-        U12(value as u16)
-    }
-
-    /// Tries to convert from `u16` value.
-    ///
-    /// If `value` is greater than `0xFFF`, this will return `None`.
-    pub fn from_u16(value: u16) -> Option<Self> {
-        if value < 0x1000 {
-            Some(U12(value))
-        } else {
-            None
-        }
-    }
-
-    /// Converts to `u16` value.
-    pub fn as_u16(&self) -> u16 {
-        self.0
     }
 }
