@@ -6,7 +6,8 @@ use std::marker::PhantomData;
 use std::vec;
 
 use attribute::{Attr, AttrDecoder, AttrEncoder, AttrValue};
-use types::{TransactionId, U12};
+use types::U12;
+use TransactionId;
 
 /// The magic cookie value.
 ///
@@ -49,7 +50,7 @@ impl Class {
     /// # Examples
     ///
     /// ```
-    /// use rustun::message::Class;
+    /// use stun_codec::message::Class;
     ///
     /// assert_eq!(Class::from_u8(0), Some(Class::Request));
     /// assert_eq!(Class::from_u8(9), None);
@@ -91,7 +92,7 @@ struct MessageHeaderDecoder {
     message_type: U16beDecoder,
     message_len: U16beDecoder,
     magic_cookie: U32beDecoder,
-    transaction_id: BytesDecoder<TransactionId>,
+    transaction_id: BytesDecoder<[u8; 12]>,
 }
 impl Decode for MessageHeaderDecoder {
     type Item = (Type, u16, TransactionId);
@@ -110,7 +111,7 @@ impl Decode for MessageHeaderDecoder {
         let message_type = track!(Type::from_u16(message_type))?;
         let message_len = track!(self.message_len.finish_decoding())?;
         let magic_cookie = track!(self.magic_cookie.finish_decoding())?;
-        let transaction_id = track!(self.transaction_id.finish_decoding())?;
+        let transaction_id = TransactionId::new(track!(self.transaction_id.finish_decoding())?);
         track_assert_eq!(magic_cookie, MAGIC_COOKIE, ErrorKind::InvalidInput);
         Ok((message_type, message_len, transaction_id))
     }

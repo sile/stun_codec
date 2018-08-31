@@ -15,8 +15,8 @@ use std::vec;
 
 use attribute::{AttrType, AttrValue};
 use message::{Message, MessageEncoder, Method};
+use net::{socket_addr_xor, SocketAddrDecoder, SocketAddrEncoder};
 use rfc5389::errors;
-use types::{SocketAddrDecoder, SocketAddrEncoder, SocketAddrValue};
 
 /// The codepoint of the [MappedAddress](struct.MappedAddress.html) attribute.
 pub const TYPE_MAPPED_ADDRESS: u16 = 0x0001;
@@ -644,16 +644,12 @@ impl XorMappedAddress {
     }
 
     pub fn pre_encode<M: Method, A: AttrValue>(&mut self, message: &Message<M, A>) -> Result<()> {
-        self.0 = SocketAddrValue::new(self.0)
-            .xor(message.transaction_id())
-            .address();
+        self.0 = socket_addr_xor(self.0, message.transaction_id());
         Ok(())
     }
 
     pub fn post_decode<M: Method, A: AttrValue>(&mut self, message: &Message<M, A>) -> Result<()> {
-        self.0 = SocketAddrValue::new(self.0)
-            .xor(message.transaction_id())
-            .address();
+        self.0 = socket_addr_xor(self.0, message.transaction_id());
         Ok(())
     }
 }
