@@ -1,7 +1,9 @@
 use bytecodec::bytes::{BytesDecoder, BytesEncoder};
 use bytecodec::combinator::{Length, Peekable};
 use bytecodec::fixnum::{U16beDecoder, U16beEncoder};
-use bytecodec::{ByteCount, Decode, Encode, Eos, Result, SizedEncode};
+use bytecodec::{ByteCount, Decode, Encode, Eos, Result, SizedEncode, TaggedDecode};
+
+use message::{Message, Method};
 
 #[derive(Debug, Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash)]
 pub struct AttrType(u16);
@@ -169,17 +171,21 @@ impl<T: AttrValue> SizedEncode for AttrEncoder<T> {
     }
 }
 
-// TODO: TaggedDecode: Decode { Tag = AttrType }
-pub trait AttrValueDecode: Decode {
-    fn start_decoding(&mut self, attr_type: AttrType) -> Result<()>;
-}
-
-pub trait AttrValue: Sized {
-    type Decoder: AttrValueDecode<Item = Self> + Default;
+pub trait AttrValue: Sized + Clone {
+    type Decoder: TaggedDecode<Tag = AttrType, Item = Self> + Default;
     type Encoder: SizedEncode<Item = Self> + Default;
 
     fn attr_type(&self) -> AttrType;
-    // TODO: fn validate()
+
+    #[allow(unused_variables)]
+    fn before_encode<M: Method, A: AttrValue>(&mut self, message: &Message<M, A>) -> Result<()> {
+        Ok(())
+    }
+
+    #[allow(unused_variables)]
+    fn after_decode<M: Method, A: AttrValue>(&mut self, message: &Message<M, A>) -> Result<()> {
+        Ok(())
+    }
 }
 
 #[derive(Debug, Default, Clone)]
