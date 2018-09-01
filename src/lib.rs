@@ -10,10 +10,10 @@ extern crate trackable;
 pub use transaction_id::TransactionId;
 
 pub mod attribute;
-pub mod constants;
 pub mod message;
 pub mod net;
 pub mod rfc5389;
 pub mod types; // TODO // TODO
 
+mod constants;
 mod transaction_id;
