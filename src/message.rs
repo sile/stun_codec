@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 use std::vec;
 
 use attribute::{Attr, AttrDecoder, AttrEncoder, AttrValue};
-use types::U12;
+use num::U12;
 use TransactionId;
 
 /// The magic cookie value.
@@ -208,7 +208,7 @@ impl<M: Method, A: AttrValue> Encode for MessageEncoder<M, A> {
     fn start_encoding(&mut self, item: Self::Item) -> Result<()> {
         let ty = Type {
             class: item.class,
-            method: U12::from_u16(item.method.as_u16()).expect("TODO"),
+            method: item.method.as_u12(),
         };
         track!(self.message_type.start_encoding(ty.as_u16()))?;
         track!(self.magic_cookie.start_encoding(MAGIC_COOKIE))?;
@@ -270,7 +270,7 @@ impl Type {
         let method = (value & 0b0000_0000_1111)
             | ((value >> 1) & 0b0000_0111_0000)
             | ((value >> 2) & 0b1111_1000_0000);
-        let method = U12::from_u16(method).unwrap();
+        let method = U12::from_u16(method).expect("never fails");
         Ok(Type {
             class: class,
             method: method,
