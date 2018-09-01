@@ -6,28 +6,9 @@ use std::marker::PhantomData;
 use std::vec;
 
 use attribute::{Attr, AttrDecoder, AttrEncoder, AttrValue};
+use constants::MAGIC_COOKIE;
 use num::U12;
-use TransactionId;
-
-/// The magic cookie value.
-///
-/// > The magic cookie field **MUST** contain the fixed value `0x2112A442` in
-/// > network byte order.
-/// > In [RFC 3489](https://tools.ietf.org/html/rfc3489), this field was part of
-/// > the transaction ID; placing the magic cookie in this location allows
-/// > a server to detect if the client will understand certain attributes
-/// > that were added in this revised specification.  In addition, it aids
-/// > in distinguishing STUN packets from packets of other protocols when
-/// > STUN is multiplexed with those other protocols on the same port.
-/// >
-/// > ([RFC 5389 -- 6. STUN Message Structure](https://tools.ietf.org/html/rfc5389#section-6))
-pub const MAGIC_COOKIE: u32 = 0x2112A442;
-
-pub trait Method: Sized + Clone {
-    fn as_u16(&self) -> u16;
-    fn as_u12(&self) -> U12;
-    fn from_u12(method: U12) -> Result<Self>;
-}
+use {Method, TransactionId};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Class {
@@ -153,9 +134,15 @@ impl<M: Method, A: AttrValue> Decode for MessageDecoder<M, A> {
         let (message_type, _, transaction_id) = track!(self.header.finish_decoding())?;
         // TODO: call validate method
         let attributes = track!(self.attributes.finish_decoding())?;
+        let method = track_assert_some!(
+            M::from_u12(message_type.method),
+            ErrorKind::InvalidInput,
+            "Unknown STUN method: {}",
+            message_type.method
+        );
         Ok(Message {
             class: message_type.class,
-            method: track!(M::from_u12(message_type.method))?,
+            method,
             transaction_id,
             attributes,
         })

@@ -3,7 +3,8 @@ use bytecodec::combinator::{Length, Peekable};
 use bytecodec::fixnum::{U16beDecoder, U16beEncoder};
 use bytecodec::{ByteCount, Decode, Encode, Eos, Result, SizedEncode, TaggedDecode};
 
-use message::{Message, Method};
+use message::Message;
+use Method;
 
 #[derive(Debug, Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash)]
 pub struct AttrType(u16);

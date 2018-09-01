@@ -14,9 +14,10 @@ use std::net::SocketAddr;
 use std::vec;
 
 use attribute::{AttrType, AttrValue};
-use message::{Message, MessageEncoder, Method};
+use message::{Message, MessageEncoder};
 use net::{socket_addr_xor, SocketAddrDecoder, SocketAddrEncoder};
 use rfc5389::errors;
+use Method;
 
 /// The codepoint of the [MappedAddress](struct.MappedAddress.html) attribute.
 pub const TYPE_MAPPED_ADDRESS: u16 = 0x0001;
