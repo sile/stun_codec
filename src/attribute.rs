@@ -2,6 +2,7 @@ use bytecodec::bytes::{BytesDecoder, BytesEncoder};
 use bytecodec::combinator::{Length, Peekable};
 use bytecodec::fixnum::{U16beDecoder, U16beEncoder};
 use bytecodec::{ByteCount, Decode, Encode, Eos, Result, SizedEncode, TaggedDecode};
+use std::fmt;
 
 use message::Message;
 use Method;
@@ -116,14 +117,33 @@ impl<T: Attribute> LosslessAttribute<T> {
     pub fn inner_ref(&self) -> &T {
         &self.inner
     }
+
+    pub fn into_inner(self) -> T {
+        self.inner
+    }
 }
 
-#[derive(Debug, Default)]
 pub struct LosslessAttributeDecoder<T: Attribute> {
     get_type: U16beDecoder,
     value_len: Peekable<U16beDecoder>,
     value: Length<T::Decoder>,
     padding: BytesDecoder<Padding>,
+}
+impl<T: Attribute> fmt::Debug for LosslessAttributeDecoder<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "LosslessAttributeDecoder {{ get_type: {:?}, value_len: {:?}, value: _, padding: {:?} }}",
+               self.get_type, self.value_len, self.padding)
+    }
+}
+impl<T: Attribute> Default for LosslessAttributeDecoder<T> {
+    fn default() -> Self {
+        LosslessAttributeDecoder {
+            get_type: Default::default(),
+            value_len: Default::default(),
+            value: Default::default(),
+            padding: Default::default(),
+        }
+    }
 }
 impl<T: Attribute> Decode for LosslessAttributeDecoder<T> {
     type Item = LosslessAttribute<T>;
@@ -176,12 +196,17 @@ impl<T: Attribute> Decode for LosslessAttributeDecoder<T> {
     }
 }
 
-#[derive(Debug)]
 pub struct LosslessAttributeEncoder<T: Attribute> {
     get_type: U16beEncoder,
     value_len: U16beEncoder,
     value: T::Encoder,
     padding: BytesEncoder<Padding>,
+}
+impl<T: Attribute> fmt::Debug for LosslessAttributeEncoder<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "LosslessAttributeEncoder {{ get_type: {:?}, value_len: {:?}, value: _, padding: {:?} }}",
+               self.get_type, self.value_len, self.padding)
+    }
 }
 impl<T: Attribute> Default for LosslessAttributeEncoder<T> {
     fn default() -> Self {

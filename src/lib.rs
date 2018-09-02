@@ -8,7 +8,7 @@ extern crate md5;
 extern crate trackable;
 
 pub use attribute::{Attribute, AttributeType};
-pub use message::{Class, Message, MessageDecoder, MessageEncoder};
+pub use message::{Message, MessageClass, MessageDecoder, MessageEncoder};
 pub use method::Method;
 pub use transaction_id::TransactionId;
 

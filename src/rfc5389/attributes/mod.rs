@@ -156,6 +156,7 @@ impl_encode!(
     |item: Self::Item| item.0
 );
 
+// TODO: impl Error
 /// `ERROR-CODE` attribute.
 ///
 /// See [RFC 5389 -- 15.6. ERROR-CODE]
