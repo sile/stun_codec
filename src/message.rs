@@ -5,7 +5,7 @@ use bytecodec::{ByteCount, Decode, Encode, Eos, ErrorKind, Result, SizedEncode};
 use std::marker::PhantomData;
 use std::vec;
 
-use attribute::{Attr, AttrDecoder, AttrEncoder, AttrValue};
+use attribute::{Attribute, LosslessAttribute, LosslessAttributeDecoder, LosslessAttributeEncoder};
 use constants::MAGIC_COOKIE;
 use num::U12;
 use {Method, TransactionId};
@@ -52,9 +52,9 @@ pub struct Message<M, A> {
     class: Class,
     method: M,
     transaction_id: TransactionId,
-    attributes: Vec<Attr<A>>,
+    attributes: Vec<LosslessAttribute<A>>,
 }
-impl<M: Method, A: AttrValue> Message<M, A> {
+impl<M: Method, A: Attribute> Message<M, A> {
     pub fn new(class: Class, method: M, transaction_id: TransactionId) -> Self {
         Message {
             class,
@@ -66,6 +66,10 @@ impl<M: Method, A: AttrValue> Message<M, A> {
 
     pub fn transaction_id(&self) -> &TransactionId {
         &self.transaction_id
+    }
+
+    pub fn attributes(&self) -> impl Iterator<Item = &A> {
+        self.attributes.iter().map(|a| a.inner_ref())
     }
 }
 
@@ -110,12 +114,12 @@ impl Decode for MessageHeaderDecoder {
     }
 }
 
-pub struct MessageDecoder<M: Method, A: AttrValue> {
+pub struct MessageDecoder<M: Method, A: Attribute> {
     header: Peekable<MessageHeaderDecoder>,
-    attributes: Length<Collect<AttrDecoder<A>, Vec<Attr<A>>>>,
+    attributes: Length<Collect<LosslessAttributeDecoder<A>, Vec<LosslessAttribute<A>>>>,
     _phantom: PhantomData<M>,
 }
-impl<M: Method, A: AttrValue> Decode for MessageDecoder<M, A> {
+impl<M: Method, A: Attribute> Decode for MessageDecoder<M, A> {
     type Item = Message<M, A>;
 
     fn decode(&mut self, buf: &[u8], eos: Eos) -> Result<usize> {
@@ -131,8 +135,9 @@ impl<M: Method, A: AttrValue> Decode for MessageDecoder<M, A> {
     }
 
     fn finish_decoding(&mut self) -> Result<Self::Item> {
+        // TODO: call after_decode
+
         let (message_type, _, transaction_id) = track!(self.header.finish_decoding())?;
-        // TODO: call validate method
         let attributes = track!(self.attributes.finish_decoding())?;
         let method = track_assert_some!(
             M::from_u12(message_type.method),
@@ -159,15 +164,15 @@ impl<M: Method, A: AttrValue> Decode for MessageDecoder<M, A> {
     }
 }
 
-pub struct MessageEncoder<M: Method, A: AttrValue> {
+pub struct MessageEncoder<M: Method, A: Attribute> {
     message_type: U16beEncoder,
     message_len: U16beEncoder,
     magic_cookie: U32beEncoder,
     transaction_id: BytesEncoder<TransactionId>,
-    attributes: PreEncode<Repeat<AttrEncoder<A>, vec::IntoIter<Attr<A>>>>,
+    attributes: PreEncode<Repeat<LosslessAttributeEncoder<A>, vec::IntoIter<LosslessAttribute<A>>>>,
     _phantom: PhantomData<M>,
 }
-impl<M: Method, A: AttrValue> Default for MessageEncoder<M, A> {
+impl<M: Method, A: Attribute> Default for MessageEncoder<M, A> {
     fn default() -> Self {
         MessageEncoder {
             message_type: Default::default(),
@@ -179,7 +184,7 @@ impl<M: Method, A: AttrValue> Default for MessageEncoder<M, A> {
         }
     }
 }
-impl<M: Method, A: AttrValue> Encode for MessageEncoder<M, A> {
+impl<M: Method, A: Attribute> Encode for MessageEncoder<M, A> {
     type Item = Message<M, A>;
 
     fn encode(&mut self, buf: &mut [u8], eos: Eos) -> Result<usize> {
@@ -202,8 +207,15 @@ impl<M: Method, A: AttrValue> Encode for MessageEncoder<M, A> {
         track!(self.transaction_id.start_encoding(item.transaction_id))?;
         track!(self.attributes.start_encoding(item.attributes.into_iter()))?;
 
-        // TODO: check length
+        // TODO: call before_encode
+
         let message_len = self.attributes.exact_requiring_bytes();
+        track_assert!(
+            message_len < 0x10000,
+            ErrorKind::InvalidInput,
+            "Too large message length: actual={}, limit=0xFFFF",
+            message_len
+        );
         track!(self.message_len.start_encoding(message_len as u16))?;
         Ok(())
     }
@@ -220,7 +232,7 @@ impl<M: Method, A: AttrValue> Encode for MessageEncoder<M, A> {
             && self.attributes.is_idle()
     }
 }
-impl<M: Method, A: AttrValue> SizedEncode for MessageEncoder<M, A> {
+impl<M: Method, A: Attribute> SizedEncode for MessageEncoder<M, A> {
     fn exact_requiring_bytes(&self) -> u64 {
         self.message_type.exact_requiring_bytes()
             + self.message_len.exact_requiring_bytes()

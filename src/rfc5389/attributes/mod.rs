@@ -13,7 +13,7 @@ use std;
 use std::net::SocketAddr;
 use std::vec;
 
-use attribute::{AttrType, AttrValue};
+use attribute::{Attribute, AttributeType};
 use message::{Message, MessageEncoder};
 use net::{socket_addr_xor, SocketAddrDecoder, SocketAddrEncoder};
 use rfc5389::errors;
@@ -74,10 +74,10 @@ macro_rules! impl_decode {
             }
         }
         impl TaggedDecode for $decoder {
-            type Tag = AttrType;
+            type Tag = AttributeType;
 
-            fn start_decoding(&mut self, attr_type: Self::Tag) -> Result<()> {
-                track_assert_eq!(attr_type.as_u16(), $code, ErrorKind::InvalidInput);
+            fn start_decoding(&mut self, get_type: Self::Tag) -> Result<()> {
+                track_assert_eq!(get_type.as_u16(), $code, ErrorKind::InvalidInput);
                 Ok(())
             }
         }
@@ -130,12 +130,12 @@ impl AlternateServer {
         self.0
     }
 }
-impl AttrValue for AlternateServer {
+impl Attribute for AlternateServer {
     type Decoder = AlternateServerDecoder;
     type Encoder = AlternateServerEncoder;
 
-    fn attr_type(&self) -> AttrType {
-        AttrType::new(TYPE_ALTERNATE_SERVER)
+    fn get_type(&self) -> AttributeType {
+        AttributeType::new(TYPE_ALTERNATE_SERVER)
     }
 }
 
@@ -242,7 +242,7 @@ impl Fingerprint {
     }
 
     /// Calculates the CRC-32 value of `message` and returns a `Fingerprint` instance containing it.
-    pub fn from_message<M: Method, A: AttrValue>(message: Message<M, A>) -> Result<Self> {
+    pub fn from_message<M: Method, A: Attribute>(message: Message<M, A>) -> Result<Self> {
         let mut bytes = track!(MessageEncoder::default().encode_into_bytes(message))?;
         let final_len = bytes.len() as u16 - 20 + 8; // Adds `Fingerprint` attribute length
         BigEndian::write_u16(&mut bytes[2..4], final_len);
@@ -250,7 +250,7 @@ impl Fingerprint {
         Ok(Fingerprint { crc32: crc32 })
     }
 
-    pub fn validate<M: Method, A: AttrValue>(&self, message: Message<M, A>) -> Result<()> {
+    pub fn validate<M: Method, A: Attribute>(&self, message: Message<M, A>) -> Result<()> {
         let actual = track!(Self::from_message(message))?;
         track_assert_eq!(actual.crc32, self.crc32, ErrorKind::InvalidInput);
         Ok(())
@@ -319,7 +319,7 @@ impl MessageIntegrity {
     pub fn new_short_term_credential<M, A>(message: Message<M, A>, password: &str) -> Result<Self>
     where
         M: Method,
-        A: AttrValue,
+        A: Attribute,
     {
         let key = password.as_bytes();
         let preceding_message_bytes = track!(Self::message_into_bytes(message))?;
@@ -339,7 +339,7 @@ impl MessageIntegrity {
     ) -> Result<Self>
     where
         M: Method,
-        A: AttrValue,
+        A: Attribute,
     {
         let key =
             md5::compute(format!("{}:{}:{}", username.name(), realm.text(), password).as_bytes());
@@ -388,12 +388,12 @@ impl MessageIntegrity {
     }
 
     // TODO: name
-    pub fn validate<M: Method, A: AttrValue>(&mut self, message: Message<M, A>) -> Result<()> {
+    pub fn validate<M: Method, A: Attribute>(&mut self, message: Message<M, A>) -> Result<()> {
         self.preceding_message_bytes = track!(Self::message_into_bytes(message))?;
         Ok(())
     }
 
-    fn message_into_bytes<M: Method, A: AttrValue>(message: Message<M, A>) -> Result<Vec<u8>> {
+    fn message_into_bytes<M: Method, A: Attribute>(message: Message<M, A>) -> Result<Vec<u8>> {
         let mut bytes = track!(MessageEncoder::default().encode_into_bytes(message))?;
         let adjusted_len = bytes.len() - 20 /*msg header*/+ 4 /*attr header*/ + 20 /*hmac*/;
         BigEndian::write_u16(&mut bytes[2..4], adjusted_len as u16);
@@ -548,16 +548,16 @@ impl_encode!(SoftwareEncoder, Software, |item: Self::Item| item
 /// (https://tools.ietf.org/html/rfc5389#section-15.9) about this attribute.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct UnknownAttributes {
-    unknowns: Vec<AttrType>,
+    unknowns: Vec<AttributeType>,
 }
 impl UnknownAttributes {
     /// Makes a new `UnknownAttributes` instance.
-    pub fn new(unknowns: Vec<AttrType>) -> Self {
+    pub fn new(unknowns: Vec<AttributeType>) -> Self {
         UnknownAttributes { unknowns: unknowns }
     }
 
     /// Returns the unknown attribute types of this instance.
-    pub fn unknowns(&self) -> &[AttrType] {
+    pub fn unknowns(&self) -> &[AttributeType] {
         &self.unknowns
     }
 }
@@ -569,7 +569,7 @@ impl_decode!(
     UnknownAttributes,
     TYPE_UNKNOWN_ATTRIBUTES,
     |vs: Vec<u16>| Ok(UnknownAttributes {
-        unknowns: vs.into_iter().map(AttrType::new).collect()
+        unknowns: vs.into_iter().map(AttributeType::new).collect()
     })
 );
 
@@ -644,12 +644,12 @@ impl XorMappedAddress {
         self.0
     }
 
-    pub fn pre_encode<M: Method, A: AttrValue>(&mut self, message: &Message<M, A>) -> Result<()> {
+    pub fn pre_encode<M: Method, A: Attribute>(&mut self, message: &Message<M, A>) -> Result<()> {
         self.0 = socket_addr_xor(self.0, message.transaction_id());
         Ok(())
     }
 
-    pub fn post_decode<M: Method, A: AttrValue>(&mut self, message: &Message<M, A>) -> Result<()> {
+    pub fn post_decode<M: Method, A: Attribute>(&mut self, message: &Message<M, A>) -> Result<()> {
         self.0 = socket_addr_xor(self.0, message.transaction_id());
         Ok(())
     }
