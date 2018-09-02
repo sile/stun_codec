@@ -3,7 +3,7 @@ use bytecodec::combinator::{Collect, PreEncode, Repeat};
 use bytecodec::fixnum::{U16beDecoder, U16beEncoder, U32beDecoder, U32beEncoder};
 use bytecodec::tuple::{TupleDecoder, TupleEncoder};
 use bytecodec::{
-    ByteCount, Decode, Encode, EncodeExt, Eos, ErrorKind, Result, SizedEncode, TaggedDecode,
+    ByteCount, Decode, Encode, EncodeExt, Eos, ErrorKind, Result, SizedEncode, TryTaggedDecode,
 };
 use byteorder::{BigEndian, ByteOrder};
 use crc::crc32;
@@ -73,12 +73,11 @@ macro_rules! impl_decode {
                 self.0.is_idle()
             }
         }
-        impl TaggedDecode for $decoder {
+        impl TryTaggedDecode for $decoder {
             type Tag = AttributeType;
 
-            fn start_decoding(&mut self, get_type: Self::Tag) -> Result<()> {
-                track_assert_eq!(get_type.as_u16(), $code, ErrorKind::InvalidInput);
-                Ok(())
+            fn try_start_decoding(&mut self, attr_type: Self::Tag) -> Result<bool> {
+                Ok(attr_type.as_u16() == $code)
             }
         }
     };

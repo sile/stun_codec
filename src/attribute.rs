@@ -1,7 +1,7 @@
-use bytecodec::bytes::{BytesDecoder, BytesEncoder};
+use bytecodec::bytes::{BytesDecoder, BytesEncoder, RemainingBytesDecoder};
 use bytecodec::combinator::{Length, Peekable};
 use bytecodec::fixnum::{U16beDecoder, U16beEncoder};
-use bytecodec::{ByteCount, Decode, Encode, Eos, Result, SizedEncode, TaggedDecode};
+use bytecodec::{ByteCount, Decode, Encode, Eos, ErrorKind, Result, SizedEncode, TryTaggedDecode};
 use std::fmt;
 
 use message::Message;
@@ -22,7 +22,7 @@ use Method;
 /// [RFC 5389 -- 5. Definitions]: https://tools.ietf.org/html/rfc5389#section-5
 pub trait Attribute: Sized + Clone {
     /// The decoder of the value part of the attribute.
-    type Decoder: Default + TaggedDecode<Tag = AttributeType, Item = Self>;
+    type Decoder: Default + TryTaggedDecode<Tag = AttributeType, Item = Self>;
 
     /// The encoder of the value part of the attribute.
     type Encoder: Default + SizedEncode<Item = Self>;
@@ -101,38 +101,189 @@ impl From<u16> for AttributeType {
     }
 }
 
+/// An [`Attribute`] implementation that has raw value bytes.
+///
+/// [`Attribute`]: ./trait.Attribute.html
 #[derive(Debug, Clone)]
-pub struct LosslessAttribute<T> {
-    inner: T,
-    padding: Option<Padding>,
+pub struct RawAttribute {
+    attr_type: AttributeType,
+    value: Vec<u8>,
+}
+impl RawAttribute {
+    /// Makes a new `RawAttribute` instance.
+    pub fn new(attr_type: AttributeType, value: Vec<u8>) -> Self {
+        RawAttribute { attr_type, value }
+    }
+
+    /// Returns a reference to the value bytes of the attribute.
+    pub fn value(&self) -> &[u8] {
+        &self.value
+    }
+
+    /// Takes ownership of this instance, and returns the value bytes.
+    pub fn into_value(self) -> Vec<u8> {
+        self.value
+    }
+}
+impl Attribute for RawAttribute {
+    type Decoder = RawAttributeDecoder;
+    type Encoder = RawAttributeEncoder;
+
+    fn get_type(&self) -> AttributeType {
+        self.attr_type
+    }
+}
+
+/// [`RawAttribute`] decoder.
+///
+/// [`RawAttribute`]: ./struct.RawAttribute.html
+#[derive(Debug, Default)]
+pub struct RawAttributeDecoder {
+    attr_type: Option<AttributeType>,
+    value: RemainingBytesDecoder,
+}
+impl RawAttributeDecoder {
+    /// Makes a new `RawAttributeDecoder` instance.
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+impl Decode for RawAttributeDecoder {
+    type Item = RawAttribute;
+
+    fn decode(&mut self, buf: &[u8], eos: Eos) -> Result<usize> {
+        track!(self.value.decode(buf, eos))
+    }
+
+    fn finish_decoding(&mut self) -> Result<Self::Item> {
+        let attr_type = track_assert_some!(self.attr_type.take(), ErrorKind::InconsistentState);
+        let value = track!(self.value.finish_decoding())?;
+        Ok(RawAttribute { attr_type, value })
+    }
+
+    fn requiring_bytes(&self) -> ByteCount {
+        self.value.requiring_bytes()
+    }
+
+    fn is_idle(&self) -> bool {
+        self.value.is_idle()
+    }
+}
+impl TryTaggedDecode for RawAttributeDecoder {
+    type Tag = AttributeType;
+
+    fn try_start_decoding(&mut self, attr_type: Self::Tag) -> Result<bool> {
+        self.attr_type = Some(attr_type);
+        Ok(true)
+    }
+}
+
+/// [`RawAttribute`] encoder.
+///
+/// [`RawAttribute`]: ./struct.RawAttribute.html
+#[derive(Debug, Default)]
+pub struct RawAttributeEncoder {
+    value: BytesEncoder,
+}
+impl RawAttributeEncoder {
+    /// Makes a new `RawAttributeEncoder` instance.
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+impl Encode for RawAttributeEncoder {
+    type Item = RawAttribute;
+
+    fn encode(&mut self, buf: &mut [u8], eos: Eos) -> Result<usize> {
+        track!(self.value.encode(buf, eos))
+    }
+
+    fn start_encoding(&mut self, item: Self::Item) -> Result<()> {
+        track!(self.value.start_encoding(item.into_value()))
+    }
+
+    fn requiring_bytes(&self) -> ByteCount {
+        ByteCount::Finite(self.exact_requiring_bytes())
+    }
+
+    fn is_idle(&self) -> bool {
+        self.value.is_idle()
+    }
+}
+impl SizedEncode for RawAttributeEncoder {
+    fn exact_requiring_bytes(&self) -> u64 {
+        self.value.exact_requiring_bytes()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum LosslessAttribute<T> {
+    Known {
+        inner: T,
+        padding: Option<Padding>,
+    },
+    Unknown {
+        inner: RawAttribute,
+        padding: Option<Padding>,
+    },
 }
 impl<T: Attribute> LosslessAttribute<T> {
     pub fn new(inner: T) -> Self {
-        LosslessAttribute {
+        LosslessAttribute::Known {
             inner,
             padding: None,
         }
     }
 
-    pub fn inner_ref(&self) -> &T {
-        &self.inner
+    pub fn as_known(&self) -> Option<&T> {
+        match self {
+            LosslessAttribute::Known { inner, .. } => Some(inner),
+            LosslessAttribute::Unknown { .. } => None,
+        }
     }
 
-    pub fn into_inner(self) -> T {
-        self.inner
+    pub fn as_unknown(&self) -> Option<&RawAttribute> {
+        match self {
+            LosslessAttribute::Known { .. } => None,
+            LosslessAttribute::Unknown { inner, .. } => Some(inner),
+        }
+    }
+
+    pub fn get_type(&self) -> AttributeType {
+        match self {
+            LosslessAttribute::Known { inner, .. } => inner.get_type(),
+            LosslessAttribute::Unknown { inner, .. } => inner.get_type(),
+        }
+    }
+
+    pub fn before_encode<M: Method, A: Attribute>(
+        &mut self,
+        message: &Message<M, A>,
+    ) -> Result<()> {
+        match self {
+            LosslessAttribute::Known { inner, .. } => inner.before_encode(message),
+            LosslessAttribute::Unknown { inner, .. } => inner.before_encode(message),
+        }
+    }
+
+    pub fn after_decode<M: Method, A: Attribute>(&mut self, message: &Message<M, A>) -> Result<()> {
+        match self {
+            LosslessAttribute::Known { inner, .. } => inner.after_decode(message),
+            LosslessAttribute::Unknown { inner, .. } => inner.after_decode(message),
+        }
     }
 }
-
 pub struct LosslessAttributeDecoder<T: Attribute> {
     get_type: U16beDecoder,
     value_len: Peekable<U16beDecoder>,
-    value: Length<T::Decoder>,
+    is_known: bool,
+    known_value: Length<T::Decoder>,
+    unknown_value: Length<RawAttributeDecoder>,
     padding: BytesDecoder<Padding>,
 }
 impl<T: Attribute> fmt::Debug for LosslessAttributeDecoder<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "LosslessAttributeDecoder {{ get_type: {:?}, value_len: {:?}, value: _, padding: {:?} }}",
-               self.get_type, self.value_len, self.padding)
+        write!(f, "LosslessAttributeDecoder {{ .. }}")
     }
 }
 impl<T: Attribute> Default for LosslessAttributeDecoder<T> {
@@ -140,7 +291,9 @@ impl<T: Attribute> Default for LosslessAttributeDecoder<T> {
         LosslessAttributeDecoder {
             get_type: Default::default(),
             value_len: Default::default(),
-            value: Default::default(),
+            is_known: false,
+            known_value: Default::default(),
+            unknown_value: Default::default(),
             padding: Default::default(),
         }
     }
@@ -155,32 +308,54 @@ impl<T: Attribute> Decode for LosslessAttributeDecoder<T> {
             bytecodec_try_decode!(self.value_len, offset, buf, eos);
 
             let get_type = AttributeType(track!(self.get_type.finish_decoding())?);
-            track!(self.value.inner_mut().start_decoding(get_type))?;
-
             let value_len = *self.value_len.peek().expect("never fails");
-            track!(self.value.set_expected_bytes(u64::from(value_len)))?;
+
+            self.is_known = track!(self.known_value.inner_mut().try_start_decoding(get_type))?;
+            if self.is_known {
+                track!(self.known_value.set_expected_bytes(u64::from(value_len)))?;
+            } else {
+                track!(self.unknown_value.set_expected_bytes(u64::from(value_len)))?;
+            }
             self.padding.set_bytes(Padding::new(value_len as usize));
         }
-        bytecodec_try_decode!(self.value, offset, buf, eos);
+        if self.is_known {
+            bytecodec_try_decode!(self.known_value, offset, buf, eos);
+        } else {
+            bytecodec_try_decode!(self.unknown_value, offset, buf, eos);
+        }
         bytecodec_try_decode!(self.padding, offset, buf, eos);
         Ok(offset)
     }
 
     fn finish_decoding(&mut self) -> Result<Self::Item> {
         let _ = track!(self.value_len.finish_decoding())?;
-        let value = track!(self.value.finish_decoding())?;
         let padding = track!(self.padding.finish_decoding())?;
-        Ok(LosslessAttribute {
-            inner: value,
-            padding: Some(padding),
-        })
+        if self.is_known {
+            let value = track!(self.known_value.finish_decoding())?;
+            Ok(LosslessAttribute::Known {
+                inner: value,
+                padding: Some(padding),
+            })
+        } else {
+            let value = track!(self.unknown_value.finish_decoding())?;
+            Ok(LosslessAttribute::Unknown {
+                inner: value,
+                padding: Some(padding),
+            })
+        }
     }
 
     fn requiring_bytes(&self) -> ByteCount {
         if self.value_len.is_idle() {
-            self.value
-                .requiring_bytes()
-                .add_for_decoding(self.padding.requiring_bytes())
+            if self.is_known {
+                self.known_value
+                    .requiring_bytes()
+                    .add_for_decoding(self.padding.requiring_bytes())
+            } else {
+                self.unknown_value
+                    .requiring_bytes()
+                    .add_for_decoding(self.padding.requiring_bytes())
+            }
         } else {
             self.get_type
                 .requiring_bytes()
@@ -189,23 +364,24 @@ impl<T: Attribute> Decode for LosslessAttributeDecoder<T> {
     }
 
     fn is_idle(&self) -> bool {
-        self.get_type.is_idle()
-            && self.value_len.is_idle()
-            && self.value.is_idle()
-            && self.padding.is_idle()
+        self.value_len.is_idle() && if self.is_known {
+            self.known_value.is_idle()
+        } else {
+            self.unknown_value.is_idle()
+        } && self.padding.is_idle()
     }
 }
 
 pub struct LosslessAttributeEncoder<T: Attribute> {
     get_type: U16beEncoder,
     value_len: U16beEncoder,
-    value: T::Encoder,
+    known_value: T::Encoder,
+    unknown_value: RawAttributeEncoder,
     padding: BytesEncoder<Padding>,
 }
 impl<T: Attribute> fmt::Debug for LosslessAttributeEncoder<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "LosslessAttributeEncoder {{ get_type: {:?}, value_len: {:?}, value: _, padding: {:?} }}",
-               self.get_type, self.value_len, self.padding)
+        write!(f, "LosslessAttributeEncoder {{ .. }}")
     }
 }
 impl<T: Attribute> Default for LosslessAttributeEncoder<T> {
@@ -213,7 +389,8 @@ impl<T: Attribute> Default for LosslessAttributeEncoder<T> {
         LosslessAttributeEncoder {
             get_type: Default::default(),
             value_len: Default::default(),
-            value: Default::default(),
+            known_value: Default::default(),
+            unknown_value: Default::default(),
             padding: Default::default(),
         }
     }
@@ -225,21 +402,29 @@ impl<T: Attribute> Encode for LosslessAttributeEncoder<T> {
         let mut offset = 0;
         bytecodec_try_encode!(self.get_type, offset, buf, eos);
         bytecodec_try_encode!(self.value_len, offset, buf, eos);
-        bytecodec_try_encode!(self.value, offset, buf, eos);
+        bytecodec_try_encode!(self.known_value, offset, buf, eos);
+        bytecodec_try_encode!(self.unknown_value, offset, buf, eos);
         bytecodec_try_encode!(self.padding, offset, buf, eos);
         Ok(offset)
     }
 
     fn start_encoding(&mut self, item: Self::Item) -> Result<()> {
-        track!(
-            self.get_type
-                .start_encoding(item.inner_ref().get_type().as_u16())
-        )?;
-        track!(self.value.start_encoding(item.inner))?;
+        track!(self.get_type.start_encoding(item.get_type().as_u16()))?;
+        match item {
+            LosslessAttribute::Known { inner, .. } => {
+                track!(self.known_value.start_encoding(inner))?;
+            }
+            LosslessAttribute::Unknown { inner, .. } => {
+                track!(self.unknown_value.start_encoding(inner))?;
+            }
+        }
 
-        let value_len = self.value.exact_requiring_bytes() as u16;
+        let value_len =
+            self.known_value.exact_requiring_bytes() + self.unknown_value.exact_requiring_bytes();
+        track_assert!(value_len < 0x10000, ErrorKind::InvalidInput; value_len);
+
         let padding = Padding::new(value_len as usize);
-        track!(self.value_len.start_encoding(value_len))?;
+        track!(self.value_len.start_encoding(value_len as u16))?;
         track!(self.padding.start_encoding(padding))?;
         Ok(())
     }
@@ -249,9 +434,9 @@ impl<T: Attribute> Encode for LosslessAttributeEncoder<T> {
     }
 
     fn is_idle(&self) -> bool {
-        self.get_type.is_idle()
-            && self.value_len.is_idle()
-            && self.value.is_idle()
+        self.value_len.is_idle()
+            && self.known_value.is_idle()
+            && self.unknown_value.is_idle()
             && self.padding.is_idle()
     }
 }
@@ -259,13 +444,14 @@ impl<T: Attribute> SizedEncode for LosslessAttributeEncoder<T> {
     fn exact_requiring_bytes(&self) -> u64 {
         self.get_type.exact_requiring_bytes()
             + self.value_len.exact_requiring_bytes()
-            + self.value.exact_requiring_bytes()
+            + self.known_value.exact_requiring_bytes()
+            + self.unknown_value.exact_requiring_bytes()
             + self.padding.exact_requiring_bytes()
     }
 }
 
 #[derive(Debug, Default, Clone)]
-struct Padding {
+pub struct Padding {
     buf: [u8; 4],
     len: usize,
 }

@@ -5,7 +5,9 @@ use bytecodec::{ByteCount, Decode, Encode, Eos, ErrorKind, Result, SizedEncode};
 use std::marker::PhantomData;
 use std::vec;
 
-use attribute::{Attribute, LosslessAttribute, LosslessAttributeDecoder, LosslessAttributeEncoder};
+use attribute::{
+    Attribute, LosslessAttribute, LosslessAttributeDecoder, LosslessAttributeEncoder, RawAttribute,
+};
 use constants::MAGIC_COOKIE;
 use num::U12;
 use {Method, TransactionId};
@@ -185,10 +187,13 @@ impl<M: Method, A: Attribute> Message<M, A> {
 
     /// Returns an iterator that iterates over the attributes in the message.
     pub fn attributes(&self) -> impl Iterator<Item = &A> {
-        self.attributes.iter().map(|a| a.inner_ref())
+        self.attributes.iter().filter_map(|a| a.as_known())
     }
 
-    // TODO: unknown_attributes()
+    // TODO: doc
+    pub fn unknown_attributes(&self) -> impl Iterator<Item = &RawAttribute> {
+        self.attributes.iter().filter_map(|a| a.as_unknown())
+    }
 
     /// Adds the given attribute to the tail of the attributes in the message.
     pub fn push_attribute(&mut self, attribute: A) {
