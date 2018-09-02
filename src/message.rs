@@ -185,12 +185,15 @@ impl<M: Method, A: Attribute> Message<M, A> {
         &self.transaction_id
     }
 
-    /// Returns an iterator that iterates over the attributes in the message.
+    /// Returns an iterator that iterates over the known attributes in the message.
     pub fn attributes(&self) -> impl Iterator<Item = &A> {
         self.attributes.iter().filter_map(|a| a.as_known())
     }
 
-    // TODO: doc
+    /// Returns an iterator that iterates over the unknown attributes in the message.
+    ///
+    /// Note that it is the responsibility of users to check
+    /// whether the unknown attributes contains comprehension-required ones.
     pub fn unknown_attributes(&self) -> impl Iterator<Item = &RawAttribute> {
         self.attributes.iter().filter_map(|a| a.as_unknown())
     }
@@ -243,6 +246,9 @@ impl Decode for MessageHeaderDecoder {
     }
 }
 
+/// [`Message`] decoder.
+///
+/// [`Message`]: ./struct.Message.html
 #[derive(Debug)]
 pub struct MessageDecoder<M: Method, A: Attribute> {
     header: Peekable<MessageHeaderDecoder>,
@@ -280,8 +286,6 @@ impl<M: Method, A: Attribute> Decode for MessageDecoder<M, A> {
     }
 
     fn finish_decoding(&mut self) -> Result<Self::Item> {
-        // TODO: call after_decode
-
         let (message_type, _, transaction_id) = track!(self.header.finish_decoding())?;
         let attributes = track!(self.attributes.finish_decoding())?;
         let method = track_assert_some!(
@@ -290,12 +294,29 @@ impl<M: Method, A: Attribute> Decode for MessageDecoder<M, A> {
             "Unknown STUN method: {}",
             message_type.method
         );
-        Ok(Message {
+        let mut message = Message {
             class: message_type.class,
             method,
             transaction_id,
             attributes,
-        })
+        };
+
+        let attributes_len = message.attributes.len();
+        for i in 0..attributes_len {
+            unsafe {
+                message.attributes.set_len(i);
+                let message_mut = &mut *(&mut message as *mut Message<M, A>);
+                let attr = message_mut.attributes.get_unchecked_mut(0);
+                if let Err(e) = track!(attr.after_decode(&message)) {
+                    message.attributes.set_len(attributes_len);
+                    return Err(e);
+                }
+            }
+        }
+        unsafe {
+            message.attributes.set_len(attributes_len);
+        }
+        Ok(message)
     }
 
     fn requiring_bytes(&self) -> ByteCount {
@@ -309,6 +330,9 @@ impl<M: Method, A: Attribute> Decode for MessageDecoder<M, A> {
     }
 }
 
+/// [`Message`] encoder.
+///
+/// [`Message`]: ./struct.Message.html
 pub struct MessageEncoder<M: Method, A: Attribute> {
     message_type: U16beEncoder,
     message_len: U16beEncoder,
@@ -316,6 +340,12 @@ pub struct MessageEncoder<M: Method, A: Attribute> {
     transaction_id: BytesEncoder<TransactionId>,
     attributes: PreEncode<Repeat<LosslessAttributeEncoder<A>, vec::IntoIter<LosslessAttribute<A>>>>,
     _phantom: PhantomData<M>,
+}
+impl<M: Method, A: Attribute> MessageEncoder<M, A> {
+    /// Makes a new `MessageEncoder` instance.
+    pub fn new() -> Self {
+        Self::default()
+    }
 }
 impl<M: Method, A: Attribute> Default for MessageEncoder<M, A> {
     fn default() -> Self {
@@ -342,17 +372,31 @@ impl<M: Method, A: Attribute> Encode for MessageEncoder<M, A> {
         Ok(offset)
     }
 
-    fn start_encoding(&mut self, item: Self::Item) -> Result<()> {
-        let ty = Type {
+    fn start_encoding(&mut self, mut item: Self::Item) -> Result<()> {
+        let attributes_len = item.attributes.len();
+        for i in 0..attributes_len {
+            unsafe {
+                item.attributes.set_len(i);
+                let item_mut = &mut *(&mut item as *mut Message<M, A>);
+                let attr = item_mut.attributes.get_unchecked_mut(0);
+                if let Err(e) = track!(attr.before_encode(&item)) {
+                    item.attributes.set_len(attributes_len);
+                    return Err(e);
+                }
+            }
+        }
+        unsafe {
+            item.attributes.set_len(attributes_len);
+        }
+
+        let message_type = Type {
             class: item.class,
             method: item.method.as_u12(),
         };
-        track!(self.message_type.start_encoding(ty.as_u16()))?;
+        track!(self.message_type.start_encoding(message_type.as_u16()))?;
         track!(self.magic_cookie.start_encoding(MAGIC_COOKIE))?;
         track!(self.transaction_id.start_encoding(item.transaction_id))?;
         track!(self.attributes.start_encoding(item.attributes.into_iter()))?;
-
-        // TODO: call before_encode
 
         let message_len = self.attributes.exact_requiring_bytes();
         track_assert!(
@@ -370,11 +414,7 @@ impl<M: Method, A: Attribute> Encode for MessageEncoder<M, A> {
     }
 
     fn is_idle(&self) -> bool {
-        self.message_type.is_idle()
-            && self.message_len.is_idle()
-            && self.magic_cookie.is_idle()
-            && self.transaction_id.is_idle()
-            && self.attributes.is_idle()
+        self.transaction_id.is_idle() && self.attributes.is_idle()
     }
 }
 impl<M: Method, A: Attribute> SizedEncode for MessageEncoder<M, A> {
