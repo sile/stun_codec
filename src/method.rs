@@ -6,7 +6,9 @@ use num::U12;
 /// > class, and the transaction ID.  The **method** indicates which of the
 /// > various requests or indications this is;
 /// >
-/// > [RFC 5389 -- 3. Overview of Operation](https://tools.ietf.org/html/rfc5389#section-3)
+/// > [RFC 5389 -- 3. Overview of Operation]
+///
+/// [RFC 5389 -- 3. Overview of Operation]: https://tools.ietf.org/html/rfc5389#section-3
 pub trait Method: Sized + Clone {
     /// Tries to convert from `codepoint` to the corresponding method.
     ///

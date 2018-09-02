@@ -11,7 +11,9 @@
 /// > response with the request that generated it; for indications, the
 /// > transaction ID serves as a debugging aid.
 /// >
-/// > ([RFC 5389 -- 3. Overview of Operation](https://tools.ietf.org/html/rfc5389#section-3))
+/// > [RFC 5389 -- 3. Overview of Operation]
+///
+/// [RFC 5389 -- 3. Overview of Operation]: https://tools.ietf.org/html/rfc5389#section-3
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct TransactionId([u8; 12]);
 impl TransactionId {

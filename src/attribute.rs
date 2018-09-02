@@ -16,7 +16,9 @@ use Method;
 /// > contains comprehension-required attributes that are not
 /// > understood.
 /// >
-/// > [RFC 5389 -- 5. Definitions](https://tools.ietf.org/html/rfc5389#section-5)
+/// > [RFC 5389 -- 5. Definitions]
+///
+/// [RFC 5389 -- 5. Definitions]: https://tools.ietf.org/html/rfc5389#section-5
 pub trait Attribute: Sized + Clone {
     /// The decoder of the value part of the attribute.
     type Decoder: Default + TaggedDecode<Tag = AttributeType, Item = Self>;
@@ -56,7 +58,7 @@ pub trait Attribute: Sized + Clone {
 /// > contains comprehension-required attributes that are not
 /// > understood.
 /// >
-/// > [RFC 5389 -- 5. Definitions](https://tools.ietf.org/html/rfc5389#section-5)
+/// > [RFC 5389 -- 5. Definitions]
 /// >
 /// > ---
 /// >
@@ -66,7 +68,9 @@ pub trait Attribute: Sized + Clone {
 /// > 0xFFFF are considered comprehension-optional.
 /// >
 /// > [RFC 5389 -- 18.2. STUN Attribute Registry]
-/// > (https://tools.ietf.org/html/rfc5389#section-18.2)
+///
+/// [RFC 5389 -- 5. Definitions]: https://tools.ietf.org/html/rfc5389#section-5
+/// [RFC 5389 -- 18.2. STUN Attribute Registry]: https://tools.ietf.org/html/rfc5389#section-18.2
 #[derive(Debug, Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash)]
 pub struct AttributeType(u16);
 impl AttributeType {
