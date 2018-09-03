@@ -2,6 +2,17 @@
 name = "stun_codec"
 version = "0.1.0"
 authors = ["Takeru Ohta <phjgt308@gmail.com>"]
+description = "Encoders and decoders for STUN (RFC 5389)"
+homepage = "https://github.com/sile/stun_codec"
+repository = "https://github.com/sile/stun_codec"
+readme = "README.md"
+keywords = ["STUN"]
+categories = ["encoding"]
+license = "MIT"
+
+[badges]
+travis-ci = {repository = "sile/stun_codec"}
+codecov = {repository = "sile/stun_codec"}
 
 [dependencies]
 bytecodec = "0.4"
