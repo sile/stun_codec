@@ -7,7 +7,7 @@ pub struct U12(u16);
 impl U12 {
     /// Converts from `u8` value.
     pub fn from_u8(value: u8) -> Self {
-        U12(value as u16)
+        U12(u16::from(value))
     }
 
     /// Tries to convert from `u16` value.
@@ -22,7 +22,7 @@ impl U12 {
     }
 
     /// Converts to `u16` value.
-    pub fn as_u16(&self) -> u16 {
+    pub fn as_u16(self) -> u16 {
         self.0
     }
 }

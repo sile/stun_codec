@@ -433,10 +433,10 @@ struct Type {
     pub method: U12,
 }
 impl Type {
-    pub fn as_u16(&self) -> u16 {
+    pub fn as_u16(self) -> u16 {
         let class = self.class as u16;
         let method = self.method.as_u16();
-        ((method & 0b0000_0000_1111) << 0)
+        (method & 0b0000_0000_1111)
             | ((class & 0b01) << 4)
             | ((method & 0b0000_0111_0000) << 5)
             | ((class & 0b10) << 7)
@@ -455,10 +455,7 @@ impl Type {
             | ((value >> 1) & 0b0000_0111_0000)
             | ((value >> 2) & 0b1111_1000_0000);
         let method = U12::from_u16(method).expect("never fails");
-        Ok(Type {
-            class: class,
-            method: method,
-        })
+        Ok(Type { class, method })
     }
 }
 

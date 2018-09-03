@@ -33,7 +33,7 @@ macro_rules! impl_decode {
             }
 
             fn finish_decoding(&mut self) -> Result<Self::Item> {
-                track!(self.0.finish_decoding()).and_then(|item| $and_then(item))
+                track!(self.0.finish_decoding()).and_then($and_then)
             }
 
             fn requiring_bytes(&self) -> ByteCount {
@@ -168,8 +168,8 @@ impl ErrorCode {
     pub fn new(code: u16, reason_phrase: String) -> Result<Self> {
         track_assert!(300 <= code && code < 600, ErrorKind::InvalidInput; code, reason_phrase);
         Ok(ErrorCode {
-            code: code,
-            reason_phrase: reason_phrase,
+            code,
+            reason_phrase,
         })
     }
 
@@ -216,7 +216,7 @@ impl_decode!(
     ErrorCode,
     |(value, reason_phrase): (u32, _)| {
         let class = (value >> 8) & 0b111;
-        let number = value & 0b11111111;
+        let number = value & 0b1111_1111;
         track_assert!(3 <= class && class < 6, ErrorKind::InvalidInput);
         track_assert!(number < 100, ErrorKind::InvalidInput);
 
@@ -240,8 +240,8 @@ impl ErrorCodeEncoder {
     }
 }
 impl_encode!(ErrorCodeEncoder, ErrorCode, |item: Self::Item| {
-    let class = (item.code / 100) as u32;
-    let number = (item.code % 100) as u32;
+    let class = u32::from(item.code / 100);
+    let number = u32::from(item.code % 100);
     let value = (class << 8) | number;
     (value, item.reason_phrase)
 });
@@ -264,7 +264,7 @@ impl Fingerprint {
         let mut bytes = track!(MessageEncoder::default().encode_into_bytes(message))?;
         let final_len = bytes.len() as u16 - 20 + 8; // Adds `Fingerprint` attribute length
         BigEndian::write_u16(&mut bytes[2..4], final_len);
-        let crc32 = crc32::checksum_ieee(&bytes[..]) ^ 0x5354554e;
+        let crc32 = crc32::checksum_ieee(&bytes[..]) ^ 0x5354_554e;
         Ok(Fingerprint { crc32 })
     }
 
@@ -741,7 +741,7 @@ impl UnknownAttributes {
 
     /// Makes a new `UnknownAttributes` instance.
     pub fn new(unknowns: Vec<AttributeType>) -> Self {
-        UnknownAttributes { unknowns: unknowns }
+        UnknownAttributes { unknowns }
     }
 
     /// Returns the unknown attribute types of this instance.

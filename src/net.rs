@@ -21,7 +21,7 @@ use bytecodec::fixnum::{U16beDecoder, U16beEncoder, U8Decoder, U8Encoder};
 use bytecodec::{ByteCount, Decode, Encode, Eos, ErrorKind, Result, SizedEncode};
 use std::net::{IpAddr, SocketAddr};
 
-use constants;
+use constants::MAGIC_COOKIE;
 use TransactionId;
 
 const FAMILY_IPV4: u8 = 1;
@@ -29,29 +29,28 @@ const FAMILY_IPV6: u8 = 2;
 
 /// Applies XOR operation on the given socket address.
 pub fn socket_addr_xor(addr: SocketAddr, transaction_id: &TransactionId) -> SocketAddr {
-    let xor_port = addr.port() ^ (constants::MAGIC_COOKIE >> 16) as u16;
-    let xor_addr = match addr.ip() {
+    let xor_port = addr.port() ^ (MAGIC_COOKIE >> 16) as u16;
+    match addr.ip() {
         IpAddr::V4(ip) => {
             let mut octets = ip.octets();
-            for i in 0..octets.len() {
-                octets[i] ^= (constants::MAGIC_COOKIE >> (24 - i * 8)) as u8;
+            for (i, b) in octets.iter_mut().enumerate() {
+                *b ^= (MAGIC_COOKIE >> (24 - i * 8)) as u8;
             }
             let xor_ip = From::from(octets);
             SocketAddr::new(IpAddr::V4(xor_ip), xor_port)
         }
         IpAddr::V6(ip) => {
             let mut octets = ip.octets();
-            for i in 0..4 {
-                octets[i] ^= (constants::MAGIC_COOKIE >> (24 - i * 8)) as u8;
+            for (i, b) in octets.iter_mut().enumerate().take(4) {
+                *b ^= (MAGIC_COOKIE >> (24 - i * 8)) as u8;
             }
-            for i in 4..16 {
-                octets[i] ^= transaction_id.as_bytes()[i - 4];
+            for (i, b) in octets.iter_mut().enumerate().take(16).skip(4) {
+                *b ^= transaction_id.as_bytes()[i - 4];
             }
             let xor_ip = From::from(octets);
             SocketAddr::new(IpAddr::V6(xor_ip), xor_port)
         }
-    };
-    xor_addr
+    }
 }
 
 /// Socket address decoder.

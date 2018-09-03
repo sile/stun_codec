@@ -81,17 +81,17 @@ impl AttributeType {
     }
 
     /// Returns the attribute codepoint corresponding this instance.
-    pub fn as_u16(&self) -> u16 {
+    pub fn as_u16(self) -> u16 {
         self.0
     }
 
     /// Returns `true` if this is a comprehension-required type.
-    pub fn is_comprehension_required(&self) -> bool {
+    pub fn is_comprehension_required(self) -> bool {
         self.0 < 0x8000
     }
 
     /// Returns `true` if this is a comprehension-optional type.
-    pub fn is_comprehension_optional(&self) -> bool {
+    pub fn is_comprehension_optional(self) -> bool {
         !self.is_comprehension_required()
     }
 }

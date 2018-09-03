@@ -10,4 +10,4 @@
 /// > STUN is multiplexed with those other protocols on the same port.
 /// >
 /// > ([RFC 5389 -- 6. STUN Message Structure](https://tools.ietf.org/html/rfc5389#section-6))
-pub const MAGIC_COOKIE: u32 = 0x2112A442;
+pub const MAGIC_COOKIE: u32 = 0x2112_A442;
