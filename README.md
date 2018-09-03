@@ -37,7 +37,7 @@ assert_eq!(
         102, 111, 111, 0
     ]
 );
-//!
+
 // Decodes the message
 let mut decoder = MessageDecoder::<Method, Attribute>::new();
 let decoded = decoder.decode_from_bytes(&bytes)?;
