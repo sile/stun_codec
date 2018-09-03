@@ -16,12 +16,10 @@ pub trait Method: Sized + Clone {
     ///
     /// # Examples
     ///
-    /// TODO:
-    ///
-    /// ```text
+    /// ```
     /// use stun_codec::Method;
-    /// use stun_codec::rfc5389::methods::Binding;
     /// use stun_codec::num::U12;
+    /// use stun_codec::rfc5389::methods::Binding;
     ///
     /// assert!(Binding::from_u12(U12::from_u8(1)).is_some());
     /// assert!(Binding::from_u12(U12::from_u8(0)).is_none());
@@ -32,9 +30,7 @@ pub trait Method: Sized + Clone {
     ///
     /// # Example
     ///
-    /// TODO:
-    ///
-    /// ```text
+    /// ```
     /// use stun_codec::Method;
     /// use stun_codec::rfc5389::methods::Binding;
     ///
