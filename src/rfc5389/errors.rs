@@ -1,5 +1,6 @@
-//! Error codes that are defined in [RFC 5389 -- 15.6 ERROR-CODE]
-//! (https://tools.ietf.org/html/rfc5389#section-15.6).
+//! Error codes that are defined in [RFC 5389 -- 15.6 ERROR-CODE].
+//!
+//! [RFC 5389 -- 15.6 ERROR-CODE]: https://tools.ietf.org/html/rfc5389#section-15.6
 use rfc5389::attributes::ErrorCode;
 
 /// `300`: "Try Alternate".
@@ -18,12 +19,18 @@ use rfc5389::attributes::ErrorCode;
 /// > > 300 response thus causing subsequent STUN messages to be
 /// > > sent to a victim.
 /// >
-/// > [RFC 5389 -- 15.6 ERROR-CODE](https://tools.ietf.org/html/rfc5389#section-15.6)
-#[derive(Debug, Clone, Copy)]
+/// > [RFC 5389 -- 15.6 ERROR-CODE]
+///
+/// [RFC 5389 -- 15.6 ERROR-CODE]: https://tools.ietf.org/html/rfc5389#section-15.6
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TryAlternate;
+impl TryAlternate {
+    /// The codepoint of the error.
+    pub const CODEPOINT: u16 = 300;
+}
 impl From<TryAlternate> for ErrorCode {
     fn from(_: TryAlternate) -> Self {
-        ErrorCode::new(300, "Try Alternate".to_string()).unwrap()
+        ErrorCode::new(TryAlternate::CODEPOINT, "Try Alternate".to_owned()).expect("never fails")
     }
 }
 
@@ -35,12 +42,18 @@ impl From<TryAlternate> for ErrorCode {
 /// > MESSAGE-INTEGRITY for this error, so the client MUST NOT expect
 /// > a valid MESSAGE-INTEGRITY attribute on this response.
 /// >
-/// > [RFC 5389 -- 15.6 ERROR-CODE](https://tools.ietf.org/html/rfc5389#section-15.6)
-#[derive(Debug, Clone, Copy)]
+/// > [RFC 5389 -- 15.6 ERROR-CODE]
+///
+/// [RFC 5389 -- 15.6 ERROR-CODE]: https://tools.ietf.org/html/rfc5389#section-15.6
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BadRequest;
+impl BadRequest {
+    /// The codepoint of the error.
+    pub const CODEPOINT: u16 = 400;
+}
 impl From<BadRequest> for ErrorCode {
     fn from(_: BadRequest) -> Self {
-        ErrorCode::new(400, "Bad Request".to_string()).unwrap()
+        ErrorCode::new(BadRequest::CODEPOINT, "Bad Request".to_owned()).expect("never fails")
     }
 }
 
@@ -50,12 +63,18 @@ impl From<BadRequest> for ErrorCode {
 /// > credentials to proceed.  The client should retry the request
 /// > with proper credentials.
 /// >
-/// > [RFC 5389 -- 15.6 ERROR-CODE](https://tools.ietf.org/html/rfc5389#section-15.6)
-#[derive(Debug, Clone, Copy)]
+/// > [RFC 5389 -- 15.6 ERROR-CODE]
+///
+/// [RFC 5389 -- 15.6 ERROR-CODE]: https://tools.ietf.org/html/rfc5389#section-15.6
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Unauthorized;
+impl Unauthorized {
+    /// The codepoint of the error.
+    pub const CODEPOINT: u16 = 401;
+}
 impl From<Unauthorized> for ErrorCode {
     fn from(_: Unauthorized) -> Self {
-        ErrorCode::new(401, "Unauthorized".to_string()).unwrap()
+        ErrorCode::new(Unauthorized::CODEPOINT, "Unauthorized".to_owned()).expect("never fails")
     }
 }
 
@@ -66,12 +85,19 @@ impl From<Unauthorized> for ErrorCode {
 /// > The server MUST put this unknown attribute in the UNKNOWN-
 /// > ATTRIBUTE attribute of its error response.
 /// >
-/// > [RFC 5389 -- 15.6 ERROR-CODE](https://tools.ietf.org/html/rfc5389#section-15.6)
-#[derive(Debug, Clone, Copy)]
+/// > [RFC 5389 -- 15.6 ERROR-CODE]
+///
+/// [RFC 5389 -- 15.6 ERROR-CODE]: https://tools.ietf.org/html/rfc5389#section-15.6
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct UnknownAttribute;
+impl UnknownAttribute {
+    /// The codepoint of the error.
+    pub const CODEPOINT: u16 = 420;
+}
 impl From<UnknownAttribute> for ErrorCode {
     fn from(_: UnknownAttribute) -> Self {
-        ErrorCode::new(420, "Unknown Attribute".to_string()).unwrap()
+        ErrorCode::new(UnknownAttribute::CODEPOINT, "Unknown Attribute".to_owned())
+            .expect("never fails")
     }
 }
 
@@ -81,12 +107,18 @@ impl From<UnknownAttribute> for ErrorCode {
 /// > The client should retry, using the NONCE provided in the
 /// > response.
 /// >
-/// > [RFC 5389 -- 15.6 ERROR-CODE](https://tools.ietf.org/html/rfc5389#section-15.6)
-#[derive(Debug, Clone, Copy)]
+/// > [RFC 5389 -- 15.6 ERROR-CODE]
+///
+/// [RFC 5389 -- 15.6 ERROR-CODE]: https://tools.ietf.org/html/rfc5389#section-15.6
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct StaleNonce;
+impl StaleNonce {
+    /// The codepoint of the error.
+    pub const CODEPOINT: u16 = 438;
+}
 impl From<StaleNonce> for ErrorCode {
     fn from(_: StaleNonce) -> Self {
-        ErrorCode::new(438, "Stale Nonce".to_string()).unwrap()
+        ErrorCode::new(StaleNonce::CODEPOINT, "Stale Nonce".to_owned()).expect("never fails")
     }
 }
 
@@ -95,11 +127,17 @@ impl From<StaleNonce> for ErrorCode {
 /// > The server has suffered a temporary error.  The
 /// > client should try again.
 /// >
-/// > [RFC 5389 -- 15.6 ERROR-CODE](https://tools.ietf.org/html/rfc5389#section-15.6)
-#[derive(Debug, Clone, Copy)]
+/// > [RFC 5389 -- 15.6 ERROR-CODE]
+///
+/// [RFC 5389 -- 15.6 ERROR-CODE]: https://tools.ietf.org/html/rfc5389#section-15.6
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ServerError;
+impl ServerError {
+    /// The codepoint of the error.
+    pub const CODEPOINT: u16 = 500;
+}
 impl From<ServerError> for ErrorCode {
     fn from(_: ServerError) -> Self {
-        ErrorCode::new(500, "Server Error".to_string()).unwrap()
+        ErrorCode::new(ServerError::CODEPOINT, "Server Error".to_owned()).expect("never fails")
     }
 }
