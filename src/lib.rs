@@ -145,6 +145,9 @@ mod tests {
         let message = decoder.decode_from_bytes(&input)?;
         assert_eq!(message.class(), MessageClass::Request);
 
+        let mut encoder = MessageEncoder::new();
+        assert_eq!(encoder.encode_into_bytes(message.clone())?, &input[..]);
+
         // TEST: `MessageIntegrity`
         let password = "VOkJxbRl1RmTxUk/WvJxBt";
         get_attr!(message, MessageIntegrity)
@@ -170,6 +173,9 @@ mod tests {
         let mut decoder = MessageDecoder::<Method, Attribute>::new();
         let message = decoder.decode_from_bytes(&input)?;
         assert_eq!(message.class(), MessageClass::SuccessResponse);
+
+        let mut encoder = MessageEncoder::new();
+        assert_eq!(encoder.encode_into_bytes(message.clone())?, &input[..]);
 
         // TEST: `MessageIntegrity`
         let password = "VOkJxbRl1RmTxUk/WvJxBt";
@@ -203,6 +209,9 @@ mod tests {
         let mut decoder = MessageDecoder::<Method, Attribute>::new();
         let message = decoder.decode_from_bytes(&input)?;
         assert_eq!(message.class(), MessageClass::SuccessResponse);
+
+        let mut encoder = MessageEncoder::new();
+        assert_eq!(encoder.encode_into_bytes(message.clone())?, &input[..]);
 
         // TEST: `MessageIntegrity`
         let password = "VOkJxbRl1RmTxUk/WvJxBt";
@@ -240,6 +249,9 @@ mod tests {
         let mut decoder = MessageDecoder::<Method, Attribute>::new();
         let message = decoder.decode_from_bytes(&input)?;
         assert_eq!(message.class(), MessageClass::Request);
+
+        let mut encoder = MessageEncoder::new();
+        assert_eq!(encoder.encode_into_bytes(message.clone())?, &input[..]);
 
         // TEST: `MessageIntegrity`
         let uesrname = get_attr!(message, Username);
