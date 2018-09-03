@@ -1,4 +1,4 @@
-use bytecodec::bytes::{BytesDecoder, BytesEncoder};
+use bytecodec::bytes::{BytesEncoder, CopyableBytesDecoder};
 use bytecodec::combinator::{Collect, Length, Peekable, PreEncode, Repeat};
 use bytecodec::fixnum::{U16beDecoder, U16beEncoder, U32beDecoder, U32beEncoder};
 use bytecodec::{ByteCount, Decode, Encode, Eos, ErrorKind, Result, SizedEncode};
@@ -209,7 +209,7 @@ struct MessageHeaderDecoder {
     message_type: U16beDecoder,
     message_len: U16beDecoder,
     magic_cookie: U32beDecoder,
-    transaction_id: BytesDecoder<[u8; 12]>,
+    transaction_id: CopyableBytesDecoder<[u8; 12]>,
 }
 impl Decode for MessageHeaderDecoder {
     type Item = (Type, u16, TransactionId);
