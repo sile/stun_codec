@@ -273,6 +273,7 @@ impl<T: Attribute> LosslessAttribute<T> {
         }
     }
 }
+
 pub struct LosslessAttributeDecoder<T: Attribute> {
     get_type: U16beDecoder,
     value_len: Peekable<U16beDecoder>,
@@ -307,13 +308,14 @@ impl<T: Attribute> Decode for LosslessAttributeDecoder<T> {
             bytecodec_try_decode!(self.get_type, offset, buf, eos);
             bytecodec_try_decode!(self.value_len, offset, buf, eos);
 
-            let get_type = AttributeType(track!(self.get_type.finish_decoding())?);
+            let attr_type = AttributeType(track!(self.get_type.finish_decoding())?);
             let value_len = *self.value_len.peek().expect("never fails");
 
-            self.is_known = track!(self.known_value.inner_mut().try_start_decoding(get_type))?;
+            self.is_known = track!(self.known_value.inner_mut().try_start_decoding(attr_type))?;
             if self.is_known {
                 track!(self.known_value.set_expected_bytes(u64::from(value_len)))?;
             } else {
+                track!(self.unknown_value.inner_mut().try_start_decoding(attr_type))?; // must be `true`
                 track!(self.unknown_value.set_expected_bytes(u64::from(value_len)))?;
             }
             self.padding.set_bytes(Padding::new(value_len as usize));
@@ -410,20 +412,22 @@ impl<T: Attribute> Encode for LosslessAttributeEncoder<T> {
 
     fn start_encoding(&mut self, item: Self::Item) -> Result<()> {
         track!(self.get_type.start_encoding(item.get_type().as_u16()))?;
-        match item {
-            LosslessAttribute::Known { inner, .. } => {
+        let padding = match item {
+            LosslessAttribute::Known { inner, padding } => {
                 track!(self.known_value.start_encoding(inner))?;
+                padding
             }
-            LosslessAttribute::Unknown { inner, .. } => {
+            LosslessAttribute::Unknown { inner, padding } => {
                 track!(self.unknown_value.start_encoding(inner))?;
+                padding
             }
-        }
+        };
 
         let value_len =
             self.known_value.exact_requiring_bytes() + self.unknown_value.exact_requiring_bytes();
         track_assert!(value_len < 0x10000, ErrorKind::InvalidInput; value_len);
 
-        let padding = Padding::new(value_len as usize);
+        let padding = padding.unwrap_or_else(|| Padding::new(value_len as usize));
         track!(self.value_len.start_encoding(value_len as u16))?;
         track!(self.padding.start_encoding(padding))?;
         Ok(())

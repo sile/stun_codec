@@ -1,7 +1,7 @@
 //! Attributes that are defined in [RFC 5389].
 //!
 //! [RFC 5389]: https://tools.ietf.org/html/rfc5389
-use bytecodec::bytes::{BytesDecoder, BytesEncoder, Utf8Decoder, Utf8Encoder};
+use bytecodec::bytes::{BytesEncoder, CopyableBytesDecoder, Utf8Decoder, Utf8Encoder};
 use bytecodec::combinator::{Collect, PreEncode, Repeat};
 use bytecodec::fixnum::{U16beDecoder, U16beEncoder, U32beDecoder, U32beEncoder};
 use bytecodec::tuple::{TupleDecoder, TupleEncoder};
@@ -492,7 +492,7 @@ impl Attribute for MessageIntegrity {
 ///
 /// [`MessageIntegrity`]: ./struct.MessageIntegrity.html
 #[derive(Debug, Default)]
-pub struct MessageIntegrityDecoder(BytesDecoder<[u8; 20]>);
+pub struct MessageIntegrityDecoder(CopyableBytesDecoder<[u8; 20]>);
 impl MessageIntegrityDecoder {
     /// Makes a new `MessageIntegrityDecoder` instance.
     pub fn new() -> Self {

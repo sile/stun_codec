@@ -306,7 +306,7 @@ impl<M: Method, A: Attribute> Decode for MessageDecoder<M, A> {
             unsafe {
                 message.attributes.set_len(i);
                 let message_mut = &mut *(&mut message as *mut Message<M, A>);
-                let attr = message_mut.attributes.get_unchecked_mut(0);
+                let attr = message_mut.attributes.get_unchecked_mut(i);
                 if let Err(e) = track!(attr.after_decode(&message)) {
                     message.attributes.set_len(attributes_len);
                     return Err(e);
@@ -378,7 +378,7 @@ impl<M: Method, A: Attribute> Encode for MessageEncoder<M, A> {
             unsafe {
                 item.attributes.set_len(i);
                 let item_mut = &mut *(&mut item as *mut Message<M, A>);
-                let attr = item_mut.attributes.get_unchecked_mut(0);
+                let attr = item_mut.attributes.get_unchecked_mut(i);
                 if let Err(e) = track!(attr.before_encode(&item)) {
                     item.attributes.set_len(attributes_len);
                     return Err(e);
