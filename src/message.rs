@@ -1,7 +1,7 @@
 use bytecodec::bytes::{BytesEncoder, CopyableBytesDecoder};
 use bytecodec::combinator::{Collect, Length, Peekable, PreEncode, Repeat};
 use bytecodec::fixnum::{U16beDecoder, U16beEncoder, U32beDecoder, U32beEncoder};
-use bytecodec::{ByteCount, Decode, Encode, Eos, ErrorKind, Result, SizedEncode};
+use bytecodec::{ByteCount, Decode, Encode, Eos, Error, ErrorKind, Result, SizedEncode};
 use std::vec;
 
 use attribute::{
@@ -244,18 +244,85 @@ impl Decode for MessageHeaderDecoder {
     }
 }
 
+#[derive(Debug)]
+struct AttributesDecoder<A: Attribute> {
+    inner: Collect<LosslessAttributeDecoder<A>, Vec<LosslessAttribute<A>>>,
+    last_error: Option<Error>,
+    is_eos: bool,
+}
+impl<A: Attribute> Default for AttributesDecoder<A> {
+    fn default() -> Self {
+        AttributesDecoder {
+            inner: Default::default(),
+            last_error: None,
+            is_eos: false,
+        }
+    }
+}
+impl<A: Attribute> Decode for AttributesDecoder<A> {
+    type Item = Vec<LosslessAttribute<A>>;
+
+    fn decode(&mut self, buf: &[u8], eos: Eos) -> Result<usize> {
+        if self.last_error.is_none() {
+            match track!(self.inner.decode(buf, eos)) {
+                Err(e) => {
+                    self.last_error = Some(e);
+                }
+                Ok(size) => return Ok(size),
+            }
+        }
+
+        // Skips remaining bytes if an error occurred
+        self.is_eos = eos.is_reached();
+        Ok(buf.len())
+    }
+
+    fn finish_decoding(&mut self) -> Result<Self::Item> {
+        self.is_eos = false;
+        if let Some(e) = self.last_error.take() {
+            return Err(track!(e));
+        }
+        track!(self.inner.finish_decoding())
+    }
+
+    fn requiring_bytes(&self) -> ByteCount {
+        if self.last_error.is_none() {
+            self.inner.requiring_bytes()
+        } else if self.is_eos {
+            ByteCount::Finite(0)
+        } else {
+            ByteCount::Unknown
+        }
+    }
+
+    fn is_idle(&self) -> bool {
+        if self.last_error.is_none() {
+            self.inner.is_idle()
+        } else {
+            self.is_eos
+        }
+    }
+}
+
 /// [`Message`] decoder.
 ///
 /// [`Message`]: ./struct.Message.html
 #[derive(Debug)]
 pub struct MessageDecoder<A: Attribute> {
     header: Peekable<MessageHeaderDecoder>,
-    attributes: Length<Collect<LosslessAttributeDecoder<A>, Vec<LosslessAttribute<A>>>>,
+    attributes: Length<AttributesDecoder<A>>,
 }
 impl<A: Attribute> MessageDecoder<A> {
     /// Makes a new `MessageDecoder` instance.
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Returns the header part of the message being decoded.
+    ///
+    /// If the header part has not been decoded yet, this will return `None`.
+    pub fn header(&self) -> Option<(Method, MessageClass, TransactionId)> {
+        self.header.peek().map(|x| (x.0.method, x.0.class, x.2))
     }
 }
 impl<A: Attribute> Default for MessageDecoder<A> {
@@ -450,11 +517,38 @@ impl Type {
 
 #[cfg(test)]
 mod tests {
+    use bytecodec::{Decode, Eos};
+    use std;
+    use trackable::error::MainError;
+
     use super::*;
+    use rfc5389::attributes::MappedAddress;
+    use rfc5389::methods::BINDING;
+    use {MessageClass, TransactionId};
 
     #[test]
     fn message_class_from_u8_works() {
         assert_eq!(MessageClass::from_u8(0), Some(MessageClass::Request));
         assert_eq!(MessageClass::from_u8(9), None);
+    }
+
+    #[test]
+    fn decoder_fails_when_decoding_attributes() -> std::result::Result<(), MainError> {
+        let bytes = [
+            0, 1, 0, 12, 33, 18, 164, 66, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 1, 0, 8, 0, 1, 0,
+            80, 127, 0, /* 0, */ 1,
+        ];
+
+        let mut decoder = MessageDecoder::<MappedAddress>::new();
+        decoder.decode(&bytes, Eos::new(true))?;
+
+        let (method, class, transaction_id) = decoder.header().unwrap();
+        assert_eq!(method, BINDING);
+        assert_eq!(class, MessageClass::Request);
+        assert_eq!(transaction_id, TransactionId::new([3; 12]));
+
+        assert!(decoder.finish_decoding().is_err());
+
+        Ok(())
     }
 }
