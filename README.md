@@ -17,14 +17,10 @@ Examples
 ```rust
 use bytecodec::{DecodeExt, EncodeExt};
 use stun_codec::{Message, MessageClass, MessageDecoder, MessageEncoder, TransactionId};
-use stun_codec::rfc5389::{attributes::Software, Attribute, Method};
+use stun_codec::rfc5389::{attributes::Software, methods::BINDING, Attribute};
 
 // Creates a message
-let mut message = Message::new(
-    MessageClass::Request,
-    Method::Binding,
-    TransactionId::new([3; 12]),
-);
+let mut message = Message::new(MessageClass::Request, BINDING, TransactionId::new([3; 12]));
 message.push_attribute(Attribute::Software(Software::new("foo".to_owned())?));
 
 // Encodes the message
@@ -39,7 +35,7 @@ assert_eq!(
 );
 
 // Decodes the message
-let mut decoder = MessageDecoder::<Method, Attribute>::new();
+let mut decoder = MessageDecoder::<Attribute>::new();
 let decoded = decoder.decode_from_bytes(&bytes)?;
 assert_eq!(decoded.class(), message.class());
 assert_eq!(decoded.method(), message.method());
