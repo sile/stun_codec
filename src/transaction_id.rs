@@ -14,7 +14,7 @@
 /// > [RFC 5389 -- 3. Overview of Operation]
 ///
 /// [RFC 5389 -- 3. Overview of Operation]: https://tools.ietf.org/html/rfc5389#section-3
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct TransactionId([u8; 12]);
 impl TransactionId {
     /// Makes a new `TransactionId` instance.

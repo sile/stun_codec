@@ -181,8 +181,8 @@ impl<M: Method, A: Attribute> Message<M, A> {
     }
 
     /// Returns the transaction ID of the message.
-    pub fn transaction_id(&self) -> &TransactionId {
-        &self.transaction_id
+    pub fn transaction_id(&self) -> TransactionId {
+        self.transaction_id
     }
 
     /// Returns an iterator that iterates over the known attributes in the message.

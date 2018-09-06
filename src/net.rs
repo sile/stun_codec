@@ -28,7 +28,7 @@ const FAMILY_IPV4: u8 = 1;
 const FAMILY_IPV6: u8 = 2;
 
 /// Applies XOR operation on the given socket address.
-pub fn socket_addr_xor(addr: SocketAddr, transaction_id: &TransactionId) -> SocketAddr {
+pub fn socket_addr_xor(addr: SocketAddr, transaction_id: TransactionId) -> SocketAddr {
     let xor_port = addr.port() ^ (MAGIC_COOKIE >> 16) as u16;
     match addr.ip() {
         IpAddr::V4(ip) => {
@@ -216,7 +216,7 @@ mod tests {
         // IPv4
         let addr: SocketAddr = "192.0.2.1:32853".parse().unwrap();
         assert_eq!(
-            socket_addr_xor(addr, &transaction_id),
+            socket_addr_xor(addr, transaction_id),
             "225.18.166.67:41287".parse().unwrap()
         );
 
@@ -225,7 +225,7 @@ mod tests {
             .parse()
             .unwrap();
         assert_eq!(
-            socket_addr_xor(addr, &transaction_id),
+            socket_addr_xor(addr, transaction_id),
             "[113:a9fa:a5d3:f179:bc25:f4b5:bed2:b9d9]:41287"
                 .parse()
                 .unwrap()
