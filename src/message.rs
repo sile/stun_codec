@@ -2,7 +2,9 @@ use bytecodec::bytes::{BytesEncoder, CopyableBytesDecoder};
 use bytecodec::combinator::{Collect, Length, Peekable, PreEncode, Repeat};
 use bytecodec::fixnum::{U16beDecoder, U16beEncoder, U32beDecoder, U32beEncoder};
 use bytecodec::{ByteCount, Decode, Encode, Eos, Error, ErrorKind, Result, SizedEncode};
+use std;
 use std::vec;
+use trackable::error::ErrorKindExt;
 
 use attribute::{
     Attribute, LosslessAttribute, LosslessAttributeDecoder, LosslessAttributeEncoder, RawAttribute,
@@ -32,6 +34,7 @@ impl MessageClass {
 }
 
 /// STUN message.
+///
 /// # NOTE: Binary Format of STUN Messages
 ///
 /// > STUN messages are encoded in binary using network-oriented format
@@ -202,6 +205,44 @@ impl<A: Attribute> Message<A> {
     }
 }
 
+/// STUN message of which [`MessageDecoder`] could not decode the attribute part.
+///
+/// [`MessageDecoder`]: ./struct.MessageDecoder.html
+#[allow(missing_docs)]
+#[derive(Debug, Clone)]
+pub struct BrokenMessage {
+    method: Method,
+    class: MessageClass,
+    transaction_id: TransactionId,
+    error: Error,
+}
+impl BrokenMessage {
+    /// Returns the class of the message.
+    pub fn class(&self) -> MessageClass {
+        self.class
+    }
+
+    /// Returns the method of the message.
+    pub fn method(&self) -> Method {
+        self.method
+    }
+
+    /// Returns the transaction ID of the message.
+    pub fn transaction_id(&self) -> TransactionId {
+        self.transaction_id
+    }
+
+    /// Returns a reference to the error object storing the cause of failure to decode the message.
+    pub fn error(&self) -> &Error {
+        &self.error
+    }
+}
+impl From<BrokenMessage> for Error {
+    fn from(f: BrokenMessage) -> Self {
+        ErrorKind::InvalidInput.cause(format!("{:?}", f)).into()
+    }
+}
+
 #[derive(Debug, Default)]
 struct MessageHeaderDecoder {
     message_type: U16beDecoder,
@@ -318,42 +359,15 @@ impl<A: Attribute> MessageDecoder<A> {
         Self::default()
     }
 
-    /// Returns the header part of the message being decoded.
-    ///
-    /// If the header part has not been decoded yet, this will return `None`.
-    pub fn header(&self) -> Option<(Method, MessageClass, TransactionId)> {
-        self.header.peek().map(|x| (x.0.method, x.0.class, x.2))
-    }
-}
-impl<A: Attribute> Default for MessageDecoder<A> {
-    fn default() -> Self {
-        MessageDecoder {
-            header: Default::default(),
-            attributes: Default::default(),
-        }
-    }
-}
-impl<A: Attribute> Decode for MessageDecoder<A> {
-    type Item = Message<A>;
-
-    fn decode(&mut self, buf: &[u8], eos: Eos) -> Result<usize> {
-        let mut offset = 0;
-        if !self.header.is_idle() {
-            bytecodec_try_decode!(self.header, offset, buf, eos);
-
-            let message_len = self.header.peek().expect("never fails").1;
-            track!(self.attributes.set_expected_bytes(u64::from(message_len)))?;
-        }
-        bytecodec_try_decode!(self.attributes, offset, buf, eos);
-        Ok(offset)
-    }
-
-    fn finish_decoding(&mut self) -> Result<Self::Item> {
-        let (message_type, _, transaction_id) = track!(self.header.finish_decoding())?;
+    fn finish_decoding_with_header(
+        &mut self,
+        method: Method,
+        class: MessageClass,
+        transaction_id: TransactionId,
+    ) -> Result<Message<A>> {
         let attributes = track!(self.attributes.finish_decoding())?;
-        let method = message_type.method;
         let mut message = Message {
-            class: message_type.class,
+            class,
             method,
             transaction_id,
             attributes,
@@ -375,6 +389,42 @@ impl<A: Attribute> Decode for MessageDecoder<A> {
             message.attributes.set_len(attributes_len);
         }
         Ok(message)
+    }
+}
+impl<A: Attribute> Default for MessageDecoder<A> {
+    fn default() -> Self {
+        MessageDecoder {
+            header: Default::default(),
+            attributes: Default::default(),
+        }
+    }
+}
+impl<A: Attribute> Decode for MessageDecoder<A> {
+    type Item = std::result::Result<Message<A>, BrokenMessage>;
+
+    fn decode(&mut self, buf: &[u8], eos: Eos) -> Result<usize> {
+        let mut offset = 0;
+        if !self.header.is_idle() {
+            bytecodec_try_decode!(self.header, offset, buf, eos);
+
+            let message_len = self.header.peek().expect("never fails").1;
+            track!(self.attributes.set_expected_bytes(u64::from(message_len)))?;
+        }
+        bytecodec_try_decode!(self.attributes, offset, buf, eos);
+        Ok(offset)
+    }
+
+    fn finish_decoding(&mut self) -> Result<Self::Item> {
+        let (Type { method, class }, _, transaction_id) = track!(self.header.finish_decoding())?;
+        match self.finish_decoding_with_header(method, class, transaction_id) {
+            Err(error) => Ok(Err(BrokenMessage {
+                method,
+                class,
+                transaction_id,
+                error,
+            })),
+            Ok(message) => Ok(Ok(message)),
+        }
     }
 
     fn requiring_bytes(&self) -> ByteCount {
@@ -517,7 +567,7 @@ impl Type {
 
 #[cfg(test)]
 mod tests {
-    use bytecodec::{Decode, Eos};
+    use bytecodec::DecodeExt;
     use std;
     use trackable::error::MainError;
 
@@ -540,14 +590,10 @@ mod tests {
         ];
 
         let mut decoder = MessageDecoder::<MappedAddress>::new();
-        decoder.decode(&bytes, Eos::new(true))?;
-
-        let (method, class, transaction_id) = decoder.header().unwrap();
-        assert_eq!(method, BINDING);
-        assert_eq!(class, MessageClass::Request);
-        assert_eq!(transaction_id, TransactionId::new([3; 12]));
-
-        assert!(decoder.finish_decoding().is_err());
+        let broken_message = decoder.decode_from_bytes(&bytes)?.err().unwrap();
+        assert_eq!(broken_message.method, BINDING);
+        assert_eq!(broken_message.class, MessageClass::Request);
+        assert_eq!(broken_message.transaction_id, TransactionId::new([3; 12]));
 
         Ok(())
     }

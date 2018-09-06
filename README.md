@@ -15,7 +15,7 @@ Examples
 --------
 
 ```rust
-use bytecodec::{DecodeExt, EncodeExt};
+use bytecodec::{DecodeExt, EncodeExt, Error};
 use stun_codec::{Message, MessageClass, MessageDecoder, MessageEncoder, TransactionId};
 use stun_codec::rfc5389::{attributes::Software, methods::BINDING, Attribute};
 
@@ -36,7 +36,7 @@ assert_eq!(
 
 // Decodes the message
 let mut decoder = MessageDecoder::<Attribute>::new();
-let decoded = decoder.decode_from_bytes(&bytes)?;
+let decoded = decoder.decode_from_bytes(&bytes)?.map_err(Error::from)?;
 assert_eq!(decoded.class(), message.class());
 assert_eq!(decoded.method(), message.method());
 assert_eq!(decoded.transaction_id(), message.transaction_id());
