@@ -1,4 +1,4 @@
-use num::U12;
+use bytecodec::{ErrorKind, Result};
 
 /// STUN method.
 ///
@@ -9,32 +9,26 @@ use num::U12;
 /// > [RFC 5389 -- 3. Overview of Operation]
 ///
 /// [RFC 5389 -- 3. Overview of Operation]: https://tools.ietf.org/html/rfc5389#section-3
-pub trait Method: Sized + Clone {
-    /// Tries to convert from `codepoint` to the corresponding method.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct Method(pub(crate) u16);
+impl Method {
+    /// Makes a new `Method` instance with the given codepoint.
     ///
-    /// If no such method exists, this will return `None`.
+    /// # Errors
     ///
-    /// # Examples
-    ///
-    /// ```
-    /// use stun_codec::Method;
-    /// use stun_codec::num::U12;
-    /// use stun_codec::rfc5389::methods::Binding;
-    ///
-    /// assert!(Binding::from_u12(U12::from_u8(1)).is_some());
-    /// assert!(Binding::from_u12(U12::from_u8(0)).is_none());
-    /// ```
-    fn from_u12(codepoint: U12) -> Option<Self>;
+    /// If `codepoint` is greater than `0xFFF`, this will return an `ErrorKind::InvalidInput` error.
+    pub fn new(codepoint: u16) -> Result<Self> {
+        track_assert!(codepoint < 0x1000, ErrorKind::InvalidInput; codepoint);
+        Ok(Method(codepoint))
+    }
 
     /// Returns the codepoint corresponding this method.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use stun_codec::Method;
-    /// use stun_codec::rfc5389::methods::Binding;
-    ///
-    /// assert_eq!(Binding.as_u12().as_u16(), 1);
-    /// ```
-    fn as_u12(&self) -> U12;
+    pub fn as_u16(self) -> u16 {
+        self.0
+    }
+}
+impl From<u8> for Method {
+    fn from(f: u8) -> Self {
+        Method(u16::from(f))
+    }
 }

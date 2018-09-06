@@ -5,7 +5,6 @@ use bytecodec::{ByteCount, Decode, Encode, Eos, ErrorKind, Result, SizedEncode, 
 use std::fmt;
 
 use message::Message;
-use Method;
 
 /// STUN attribute.
 ///
@@ -37,7 +36,7 @@ pub trait Attribute: Sized + Clone {
     ///
     /// The default implementation simply returns `Ok(())`.
     #[allow(unused_variables)]
-    fn before_encode<M: Method, A: Attribute>(&mut self, message: &Message<M, A>) -> Result<()> {
+    fn before_encode<A: Attribute>(&mut self, message: &Message<A>) -> Result<()> {
         Ok(())
     }
 
@@ -45,7 +44,7 @@ pub trait Attribute: Sized + Clone {
     ///
     /// The default implementation simply returns `Ok(())`.
     #[allow(unused_variables)]
-    fn after_decode<M: Method, A: Attribute>(&mut self, message: &Message<M, A>) -> Result<()> {
+    fn after_decode<A: Attribute>(&mut self, message: &Message<A>) -> Result<()> {
         Ok(())
     }
 }
@@ -256,17 +255,14 @@ impl<T: Attribute> LosslessAttribute<T> {
         }
     }
 
-    pub fn before_encode<M: Method, A: Attribute>(
-        &mut self,
-        message: &Message<M, A>,
-    ) -> Result<()> {
+    pub fn before_encode<A: Attribute>(&mut self, message: &Message<A>) -> Result<()> {
         match self {
             LosslessAttribute::Known { inner, .. } => inner.before_encode(message),
             LosslessAttribute::Unknown { inner, .. } => inner.before_encode(message),
         }
     }
 
-    pub fn after_decode<M: Method, A: Attribute>(&mut self, message: &Message<M, A>) -> Result<()> {
+    pub fn after_decode<A: Attribute>(&mut self, message: &Message<A>) -> Result<()> {
         match self {
             LosslessAttribute::Known { inner, .. } => inner.after_decode(message),
             LosslessAttribute::Unknown { inner, .. } => inner.after_decode(message),

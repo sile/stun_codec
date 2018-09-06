@@ -7,15 +7,11 @@
 //! # extern crate stun_codec;
 //! use bytecodec::{DecodeExt, EncodeExt};
 //! use stun_codec::{Message, MessageClass, MessageDecoder, MessageEncoder, TransactionId};
-//! use stun_codec::rfc5389::{attributes::Software, Attribute, Method};
+//! use stun_codec::rfc5389::{attributes::Software, methods::BINDING, Attribute};
 //!
 //! # fn main() -> bytecodec::Result<()> {
 //! // Creates a message
-//! let mut message = Message::new(
-//!     MessageClass::Request,
-//!     Method::Binding,
-//!     TransactionId::new([3; 12]),
-//! );
+//! let mut message = Message::new(MessageClass::Request, BINDING, TransactionId::new([3; 12]));
 //! message.push_attribute(Attribute::Software(Software::new("foo".to_owned())?));
 //!
 //! // Encodes the message
@@ -30,7 +26,7 @@
 //! );
 //!
 //! // Decodes the message
-//! let mut decoder = MessageDecoder::<Method, Attribute>::new();
+//! let mut decoder = MessageDecoder::<Attribute>::new();
 //! let decoded = decoder.decode_from_bytes(&bytes)?;
 //! assert_eq!(decoded.class(), message.class());
 //! assert_eq!(decoded.method(), message.method());
@@ -47,7 +43,6 @@
 //!
 //! [RFC 5389]: https://tools.ietf.org/html/rfc5389
 //! [RFC 5769]: https://tools.ietf.org/html/rfc5769
-
 #![warn(missing_docs)]
 
 #[macro_use]
@@ -67,7 +62,6 @@ pub use method::Method;
 pub use transaction_id::TransactionId;
 
 pub mod net;
-pub mod num;
 pub mod rfc5389;
 
 mod attribute;
@@ -81,7 +75,8 @@ mod tests {
     use super::*;
     use bytecodec::{DecodeExt, EncodeExt};
     use rfc5389::attributes::Software;
-    use rfc5389::{Attribute, Method};
+    use rfc5389::methods::BINDING;
+    use rfc5389::Attribute;
     use trackable::error::MainError;
 
     macro_rules! get_attr {
@@ -102,11 +97,7 @@ mod tests {
 
     #[test]
     fn it_works() -> Result<(), MainError> {
-        let mut message = Message::new(
-            MessageClass::Request,
-            Method::Binding,
-            TransactionId::new([3; 12]),
-        );
+        let mut message = Message::new(MessageClass::Request, BINDING, TransactionId::new([3; 12]));
         message.push_attribute(Attribute::Software(Software::new("foo".to_owned())?));
 
         let mut encoder = MessageEncoder::new();
@@ -119,7 +110,7 @@ mod tests {
             ]
         );
 
-        let mut decoder = MessageDecoder::<Method, Attribute>::new();
+        let mut decoder = MessageDecoder::<Attribute>::new();
         let decoded = decoder.decode_from_bytes(&bytes)?;
         assert_eq!(decoded.class(), message.class());
         assert_eq!(decoded.method(), message.method());
@@ -141,7 +132,7 @@ mod tests {
             0xbf, 0xd8, 0xcb, 0x56, 0x78, 0x1e, 0xf2, 0xb5, 0xb2, 0xd3, 0xf2, 0x49, 0xc1, 0xb5,
             0x71, 0xa2, 0x80, 0x28, 0x00, 0x04, 0xe5, 0x7a, 0x3b, 0xcf,
         ];
-        let mut decoder = MessageDecoder::<Method, Attribute>::new();
+        let mut decoder = MessageDecoder::<Attribute>::new();
         let message = decoder.decode_from_bytes(&input)?;
         assert_eq!(message.class(), MessageClass::Request);
 
@@ -170,7 +161,7 @@ mod tests {
             0xfd, 0x9e, 0x90, 0xc3, 0x8c, 0x74, 0x89, 0xf9, 0x2a, 0xf9, 0xba, 0x53, 0xf0, 0x6b,
             0xe7, 0xd7, 0x80, 0x28, 0x00, 0x04, 0xc0, 0x7d, 0x4c, 0x96,
         ];
-        let mut decoder = MessageDecoder::<Method, Attribute>::new();
+        let mut decoder = MessageDecoder::<Attribute>::new();
         let message = decoder.decode_from_bytes(&input)?;
         assert_eq!(message.class(), MessageClass::SuccessResponse);
 
@@ -206,7 +197,7 @@ mod tests {
             0x7b, 0xf1, 0x17, 0x84, 0xc9, 0x7c, 0x82, 0x92, 0xc2, 0x75, 0xbf, 0xe3, 0xed, 0x41,
             0x80, 0x28, 0x00, 0x04, 0xc8, 0xfb, 0x0b, 0x4c,
         ];
-        let mut decoder = MessageDecoder::<Method, Attribute>::new();
+        let mut decoder = MessageDecoder::<Attribute>::new();
         let message = decoder.decode_from_bytes(&input)?;
         assert_eq!(message.class(), MessageClass::SuccessResponse);
 
@@ -246,7 +237,7 @@ mod tests {
             0x24, 0x65, 0x6d, 0xd6, 0x4a, 0x3e, 0x02, 0xb8, 0xe0, 0x71, 0x2e, 0x85, 0xc9, 0xa2,
             0x8c, 0xa8, 0x96, 0x66,
         ];
-        let mut decoder = MessageDecoder::<Method, Attribute>::new();
+        let mut decoder = MessageDecoder::<Attribute>::new();
         let message = decoder.decode_from_bytes(&input)?;
         assert_eq!(message.class(), MessageClass::Request);
 

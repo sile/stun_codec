@@ -2,14 +2,12 @@ use bytecodec::bytes::{BytesEncoder, CopyableBytesDecoder};
 use bytecodec::combinator::{Collect, Length, Peekable, PreEncode, Repeat};
 use bytecodec::fixnum::{U16beDecoder, U16beEncoder, U32beDecoder, U32beEncoder};
 use bytecodec::{ByteCount, Decode, Encode, Eos, ErrorKind, Result, SizedEncode};
-use std::marker::PhantomData;
 use std::vec;
 
 use attribute::{
     Attribute, LosslessAttribute, LosslessAttributeDecoder, LosslessAttributeEncoder, RawAttribute,
 };
 use constants::MAGIC_COOKIE;
-use num::U12;
 use {Method, TransactionId};
 
 /// The class of a message.
@@ -153,15 +151,15 @@ impl MessageClass {
 /// [RFC 791]: https://tools.ietf.org/html/rfc791
 /// [RFC 3489]: https://tools.ietf.org/html/rfc3489
 #[derive(Debug, Clone)]
-pub struct Message<M, A> {
+pub struct Message<A> {
     class: MessageClass,
-    method: M,
+    method: Method,
     transaction_id: TransactionId,
     attributes: Vec<LosslessAttribute<A>>,
 }
-impl<M: Method, A: Attribute> Message<M, A> {
+impl<A: Attribute> Message<A> {
     /// Makes a new `Message` instance.
-    pub fn new(class: MessageClass, method: M, transaction_id: TransactionId) -> Self {
+    pub fn new(class: MessageClass, method: Method, transaction_id: TransactionId) -> Self {
         Message {
             class,
             method,
@@ -176,8 +174,8 @@ impl<M: Method, A: Attribute> Message<M, A> {
     }
 
     /// Returns the method of the message.
-    pub fn method(&self) -> &M {
-        &self.method
+    pub fn method(&self) -> Method {
+        self.method
     }
 
     /// Returns the transaction ID of the message.
@@ -250,28 +248,26 @@ impl Decode for MessageHeaderDecoder {
 ///
 /// [`Message`]: ./struct.Message.html
 #[derive(Debug)]
-pub struct MessageDecoder<M: Method, A: Attribute> {
+pub struct MessageDecoder<A: Attribute> {
     header: Peekable<MessageHeaderDecoder>,
     attributes: Length<Collect<LosslessAttributeDecoder<A>, Vec<LosslessAttribute<A>>>>,
-    _phantom: PhantomData<M>,
 }
-impl<M: Method, A: Attribute> MessageDecoder<M, A> {
+impl<A: Attribute> MessageDecoder<A> {
     /// Makes a new `MessageDecoder` instance.
     pub fn new() -> Self {
         Self::default()
     }
 }
-impl<M: Method, A: Attribute> Default for MessageDecoder<M, A> {
+impl<A: Attribute> Default for MessageDecoder<A> {
     fn default() -> Self {
         MessageDecoder {
             header: Default::default(),
             attributes: Default::default(),
-            _phantom: Default::default(),
         }
     }
 }
-impl<M: Method, A: Attribute> Decode for MessageDecoder<M, A> {
-    type Item = Message<M, A>;
+impl<A: Attribute> Decode for MessageDecoder<A> {
+    type Item = Message<A>;
 
     fn decode(&mut self, buf: &[u8], eos: Eos) -> Result<usize> {
         let mut offset = 0;
@@ -288,12 +284,7 @@ impl<M: Method, A: Attribute> Decode for MessageDecoder<M, A> {
     fn finish_decoding(&mut self) -> Result<Self::Item> {
         let (message_type, _, transaction_id) = track!(self.header.finish_decoding())?;
         let attributes = track!(self.attributes.finish_decoding())?;
-        let method = track_assert_some!(
-            M::from_u12(message_type.method),
-            ErrorKind::InvalidInput,
-            "Unknown STUN method: {}",
-            message_type.method
-        );
+        let method = message_type.method;
         let mut message = Message {
             class: message_type.class,
             method,
@@ -305,7 +296,7 @@ impl<M: Method, A: Attribute> Decode for MessageDecoder<M, A> {
         for i in 0..attributes_len {
             unsafe {
                 message.attributes.set_len(i);
-                let message_mut = &mut *(&mut message as *mut Message<M, A>);
+                let message_mut = &mut *(&mut message as *mut Message<A>);
                 let attr = message_mut.attributes.get_unchecked_mut(i);
                 if let Err(e) = track!(attr.after_decode(&message)) {
                     message.attributes.set_len(attributes_len);
@@ -333,21 +324,20 @@ impl<M: Method, A: Attribute> Decode for MessageDecoder<M, A> {
 /// [`Message`] encoder.
 ///
 /// [`Message`]: ./struct.Message.html
-pub struct MessageEncoder<M: Method, A: Attribute> {
+pub struct MessageEncoder<A: Attribute> {
     message_type: U16beEncoder,
     message_len: U16beEncoder,
     magic_cookie: U32beEncoder,
     transaction_id: BytesEncoder<TransactionId>,
     attributes: PreEncode<Repeat<LosslessAttributeEncoder<A>, vec::IntoIter<LosslessAttribute<A>>>>,
-    _phantom: PhantomData<M>,
 }
-impl<M: Method, A: Attribute> MessageEncoder<M, A> {
+impl<A: Attribute> MessageEncoder<A> {
     /// Makes a new `MessageEncoder` instance.
     pub fn new() -> Self {
         Self::default()
     }
 }
-impl<M: Method, A: Attribute> Default for MessageEncoder<M, A> {
+impl<A: Attribute> Default for MessageEncoder<A> {
     fn default() -> Self {
         MessageEncoder {
             message_type: Default::default(),
@@ -355,12 +345,11 @@ impl<M: Method, A: Attribute> Default for MessageEncoder<M, A> {
             magic_cookie: Default::default(),
             transaction_id: Default::default(),
             attributes: Default::default(),
-            _phantom: Default::default(),
         }
     }
 }
-impl<M: Method, A: Attribute> Encode for MessageEncoder<M, A> {
-    type Item = Message<M, A>;
+impl<A: Attribute> Encode for MessageEncoder<A> {
+    type Item = Message<A>;
 
     fn encode(&mut self, buf: &mut [u8], eos: Eos) -> Result<usize> {
         let mut offset = 0;
@@ -377,7 +366,7 @@ impl<M: Method, A: Attribute> Encode for MessageEncoder<M, A> {
         for i in 0..attributes_len {
             unsafe {
                 item.attributes.set_len(i);
-                let item_mut = &mut *(&mut item as *mut Message<M, A>);
+                let item_mut = &mut *(&mut item as *mut Message<A>);
                 let attr = item_mut.attributes.get_unchecked_mut(i);
                 if let Err(e) = track!(attr.before_encode(&item)) {
                     item.attributes.set_len(attributes_len);
@@ -391,7 +380,7 @@ impl<M: Method, A: Attribute> Encode for MessageEncoder<M, A> {
 
         let message_type = Type {
             class: item.class,
-            method: item.method.as_u12(),
+            method: item.method,
         };
         track!(self.message_type.start_encoding(message_type.as_u16()))?;
         track!(self.magic_cookie.start_encoding(MAGIC_COOKIE))?;
@@ -417,7 +406,7 @@ impl<M: Method, A: Attribute> Encode for MessageEncoder<M, A> {
         self.transaction_id.is_idle() && self.attributes.is_idle()
     }
 }
-impl<M: Method, A: Attribute> SizedEncode for MessageEncoder<M, A> {
+impl<A: Attribute> SizedEncode for MessageEncoder<A> {
     fn exact_requiring_bytes(&self) -> u64 {
         self.message_type.exact_requiring_bytes()
             + self.message_len.exact_requiring_bytes()
@@ -429,11 +418,11 @@ impl<M: Method, A: Attribute> SizedEncode for MessageEncoder<M, A> {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct Type {
-    pub class: MessageClass,
-    pub method: U12,
+    class: MessageClass,
+    method: Method,
 }
 impl Type {
-    pub fn as_u16(self) -> u16 {
+    fn as_u16(self) -> u16 {
         let class = self.class as u16;
         let method = self.method.as_u16();
         (method & 0b0000_0000_1111)
@@ -443,7 +432,7 @@ impl Type {
             | ((method & 0b1111_1000_0000) << 9)
     }
 
-    pub fn from_u16(value: u16) -> Result<Self> {
+    fn from_u16(value: u16) -> Result<Self> {
         track_assert!(
             value >> 14 == 0,
             ErrorKind::InvalidInput,
@@ -454,7 +443,7 @@ impl Type {
         let method = (value & 0b0000_0000_1111)
             | ((value >> 1) & 0b0000_0111_0000)
             | ((value >> 2) & 0b1111_1000_0000);
-        let method = U12::from_u16(method).expect("never fails");
+        let method = Method(method);
         Ok(Type { class, method })
     }
 }

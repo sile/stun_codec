@@ -1,7 +1,6 @@
 //! Methods that are defined in [RFC 5389].
 //!
 //! [RFC 5389]: https://tools.ietf.org/html/rfc5389
-use num::U12;
 use Method;
 
 /// Binding method.
@@ -36,22 +35,4 @@ use Method;
 /// > [RFC 5389 -- 3. Overview of Operation]
 ///
 /// [RFC 5389 -- 3. Overview of Operation]: https://tools.ietf.org/html/rfc5389#section-3
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Binding;
-impl Binding {
-    /// The codepoint of the method.
-    pub const CODEPOINT: u16 = 0x0001;
-}
-impl Method for Binding {
-    fn from_u12(value: U12) -> Option<Self> {
-        if value.as_u16() == Self::CODEPOINT {
-            Some(Binding)
-        } else {
-            None
-        }
-    }
-
-    fn as_u12(&self) -> U12 {
-        U12::from_u16(Self::CODEPOINT).unwrap()
-    }
-}
+pub const BINDING: Method = Method(0x0001);

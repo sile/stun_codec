@@ -21,7 +21,6 @@ use attribute::{Attribute, AttributeType};
 use message::{Message, MessageEncoder};
 use net::{socket_addr_xor, SocketAddrDecoder, SocketAddrEncoder};
 use rfc5389::errors;
-use Method;
 
 macro_rules! impl_decode {
     ($decoder:ty, $item:ident, $and_then:expr) => {
@@ -260,7 +259,7 @@ impl Fingerprint {
     pub const CODEPOINT: u16 = 0x8028;
 
     /// Calculates the CRC-32 value of `message` and returns a `Fingerprint` instance containing it.
-    pub fn new<M: Method, A: Attribute>(message: Message<M, A>) -> Result<Self> {
+    pub fn new<A: Attribute>(message: Message<A>) -> Result<Self> {
         let mut bytes = track!(MessageEncoder::default().encode_into_bytes(message))?;
         let final_len = bytes.len() as u16 - 20 + 8; // Adds `Fingerprint` attribute length
         BigEndian::write_u16(&mut bytes[2..4], final_len);
@@ -281,7 +280,7 @@ impl Attribute for Fingerprint {
         AttributeType::new(Self::CODEPOINT)
     }
 
-    fn after_decode<M: Method, A: Attribute>(&mut self, message: &Message<M, A>) -> Result<()> {
+    fn after_decode<A: Attribute>(&mut self, message: &Message<A>) -> Result<()> {
         let actual = track!(Self::new(message.clone()))?;
         track_assert_eq!(actual.crc32, self.crc32, ErrorKind::InvalidInput);
         Ok(())
@@ -396,9 +395,8 @@ impl MessageIntegrity {
     pub const CODEPOINT: u16 = 0x0008;
 
     /// Makes a new `MessageIntegrity` instance for short-term credentials.
-    pub fn new_short_term_credential<M, A>(message: Message<M, A>, password: &str) -> Result<Self>
+    pub fn new_short_term_credential<A>(message: Message<A>, password: &str) -> Result<Self>
     where
-        M: Method,
         A: Attribute,
     {
         let key = password.as_bytes();
@@ -411,14 +409,13 @@ impl MessageIntegrity {
     }
 
     /// Makes a new `MessageIntegrity` instance for long-term credentials.
-    pub fn new_long_term_credential<M, A>(
-        message: Message<M, A>,
+    pub fn new_long_term_credential<A>(
+        message: Message<A>,
         username: &Username,
         realm: &Realm,
         password: &str,
     ) -> Result<Self>
     where
-        M: Method,
         A: Attribute,
     {
         let key =
@@ -467,7 +464,7 @@ impl MessageIntegrity {
         self.hmac_sha1
     }
 
-    fn message_into_bytes<M: Method, A: Attribute>(message: Message<M, A>) -> Result<Vec<u8>> {
+    fn message_into_bytes<A: Attribute>(message: Message<A>) -> Result<Vec<u8>> {
         let mut bytes = track!(MessageEncoder::default().encode_into_bytes(message))?;
         let adjusted_len = bytes.len() - 20 /*msg header*/+ 4 /*attr header*/ + 20 /*hmac*/;
         BigEndian::write_u16(&mut bytes[2..4], adjusted_len as u16);
@@ -482,7 +479,7 @@ impl Attribute for MessageIntegrity {
         AttributeType::new(Self::CODEPOINT)
     }
 
-    fn after_decode<M: Method, A: Attribute>(&mut self, message: &Message<M, A>) -> Result<()> {
+    fn after_decode<A: Attribute>(&mut self, message: &Message<A>) -> Result<()> {
         self.preceding_message_bytes = track!(Self::message_into_bytes(message.clone()))?;
         Ok(())
     }
@@ -896,12 +893,12 @@ impl Attribute for XorMappedAddress {
         AttributeType::new(Self::CODEPOINT)
     }
 
-    fn before_encode<M: Method, A: Attribute>(&mut self, message: &Message<M, A>) -> Result<()> {
+    fn before_encode<A: Attribute>(&mut self, message: &Message<A>) -> Result<()> {
         self.0 = socket_addr_xor(self.0, message.transaction_id());
         Ok(())
     }
 
-    fn after_decode<M: Method, A: Attribute>(&mut self, message: &Message<M, A>) -> Result<()> {
+    fn after_decode<A: Attribute>(&mut self, message: &Message<A>) -> Result<()> {
         self.0 = socket_addr_xor(self.0, message.transaction_id());
         Ok(())
     }
