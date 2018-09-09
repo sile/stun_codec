@@ -450,15 +450,20 @@ impl<T: Attribute> SizedEncode for LosslessAttributeEncoder<T> {
     }
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Default, Clone)]
 pub struct Padding {
-    buf: [u8; 4],
+    buf: [u8; 3],
     len: usize,
 }
 impl Padding {
     fn new(value_len: usize) -> Self {
         let len = (4 - value_len % 4) % 4;
-        Padding { buf: [0; 4], len }
+        Padding { buf: [0; 3], len }
+    }
+}
+impl fmt::Debug for Padding {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Padding({:?})", self.as_ref())
     }
 }
 impl AsRef<[u8]> for Padding {

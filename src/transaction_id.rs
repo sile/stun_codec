@@ -1,3 +1,5 @@
+use std::fmt;
+
 /// Transaction ID.
 ///
 /// > STUN is a client-server protocol.  It supports two types of
@@ -14,7 +16,7 @@
 /// > [RFC 5389 -- 3. Overview of Operation]
 ///
 /// [RFC 5389 -- 3. Overview of Operation]: https://tools.ietf.org/html/rfc5389#section-3
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct TransactionId([u8; 12]);
 impl TransactionId {
     /// Makes a new `TransactionId` instance.
@@ -25,6 +27,16 @@ impl TransactionId {
     /// Returns a reference to the bytes that represents the identifier.
     pub fn as_bytes(&self) -> &[u8; 12] {
         &self.0
+    }
+}
+impl fmt::Debug for TransactionId {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "TransactionId(0x")?;
+        for b in self.as_ref() {
+            write!(f, "{:02X}", b)?;
+        }
+        write!(f, ")")?;
+        Ok(())
     }
 }
 impl AsRef<[u8]> for TransactionId {
