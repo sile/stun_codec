@@ -1,4 +1,4 @@
-//! Encoders and decoders for [STUN (RFC 5389)][RFC 5389].
+//! Encoders and decoders for [STUN (RFC 5389)][RFC 5389] and its extensions.
 //!
 //! # Examples
 //!
@@ -63,6 +63,7 @@ pub use transaction_id::TransactionId;
 
 pub mod net;
 pub mod rfc5389;
+pub mod rfc5766;
 
 mod attribute;
 mod constants;

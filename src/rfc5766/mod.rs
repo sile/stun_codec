@@ -1,11 +1,12 @@
-//! [RFC 5389(STUN)][RFC 5389] specific components.
+//! [RFC 5766(TURN)][RFC 5766] specific components.
 //!
-//! [RFC 5389]: https://tools.ietf.org/html/rfc5389
+//! [RFC 5766]: https://tools.ietf.org/html/rfc5766
 use bytecodec::{
     ByteCount, Decode, Encode, EncodeExt, Eos, ErrorKind, Result, SizedEncode, TryTaggedDecode,
 };
 
 use self::attributes::*;
+use rfc5389::attributes::*;
 use {AttributeType, Message};
 
 pub mod attributes;
@@ -151,12 +152,14 @@ macro_rules! impl_attribute_encoder_inner {
     };
 }
 
-/// Attribute set that are defined in [RFC 5389].
+/// Attribute set that are defined in [RFC 5766] and [RFC 5389].
 ///
 /// [RFC 5389]: https://tools.ietf.org/html/rfc5389
+/// [RFC 5766]: https://tools.ietf.org/html/rfc5766
 #[allow(missing_docs)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Attribute {
+    // RFC 5389
     MappedAddress(MappedAddress),
     Username(Username),
     MessageIntegrity(MessageIntegrity),
@@ -168,6 +171,17 @@ pub enum Attribute {
     Software(Software),
     AlternateServer(AlternateServer),
     Fingerprint(Fingerprint),
+
+    // RFC 5766
+    ChannelNumber(ChannelNumber),
+    Lifetime(Lifetime),
+    XorPeerAddress(XorPeerAddress),
+    Data(Data),
+    XorRelayAddress(XorRelayAddress),
+    EvenPort(EvenPort),
+    RequestedTransport(RequestedTransport),
+    DontFragment(DontFragment),
+    ReservationToken(ReservationToken),
 }
 impl_attribute!(
     MappedAddress,
@@ -180,7 +194,16 @@ impl_attribute!(
     XorMappedAddress,
     Software,
     AlternateServer,
-    Fingerprint
+    Fingerprint,
+    ChannelNumber,
+    Lifetime,
+    XorPeerAddress,
+    Data,
+    XorRelayAddress,
+    EvenPort,
+    RequestedTransport,
+    DontFragment,
+    ReservationToken
 );
 
 /// [`Attribute`] decoder.
@@ -223,6 +246,7 @@ impl TryTaggedDecode for AttributeDecoder {
 
 #[derive(Debug)]
 enum AttributeDecoderInner {
+    // RFC 5389
     MappedAddress(MappedAddressDecoder),
     Username(UsernameDecoder),
     MessageIntegrity(MessageIntegrityDecoder),
@@ -234,6 +258,18 @@ enum AttributeDecoderInner {
     Software(SoftwareDecoder),
     AlternateServer(AlternateServerDecoder),
     Fingerprint(FingerprintDecoder),
+
+    // RFC 5766
+    ChannelNumber(ChannelNumberDecoder),
+    Lifetime(LifetimeDecoder),
+    XorPeerAddress(XorPeerAddressDecoder),
+    Data(DataDecoder),
+    XorRelayAddress(XorRelayAddressDecoder),
+    EvenPort(EvenPortDecoder),
+    RequestedTransport(RequestedTransportDecoder),
+    DontFragment(DontFragmentDecoder),
+    ReservationToken(ReservationTokenDecoder),
+
     None,
 }
 impl Default for AttributeDecoderInner {
@@ -252,7 +288,16 @@ impl_attribute_decoder_inner!(
     [XorMappedAddress, XorMappedAddressDecoder],
     [Software, SoftwareDecoder],
     [AlternateServer, AlternateServerDecoder],
-    [Fingerprint, FingerprintDecoder]
+    [Fingerprint, FingerprintDecoder],
+    [ChannelNumber, ChannelNumberDecoder],
+    [Lifetime, LifetimeDecoder],
+    [XorPeerAddress, XorPeerAddressDecoder],
+    [Data, DataDecoder],
+    [XorRelayAddress, XorRelayAddressDecoder],
+    [EvenPort, EvenPortDecoder],
+    [RequestedTransport, RequestedTransportDecoder],
+    [DontFragment, DontFragmentDecoder],
+    [ReservationToken, ReservationTokenDecoder]
 );
 
 /// [`Attribute`] encoder.
@@ -293,6 +338,7 @@ impl SizedEncode for AttributeEncoder {
 
 #[derive(Debug)]
 enum AttributeEncoderInner {
+    // RFC 5389
     MappedAddress(MappedAddressEncoder),
     Username(UsernameEncoder),
     MessageIntegrity(MessageIntegrityEncoder),
@@ -304,6 +350,18 @@ enum AttributeEncoderInner {
     Software(SoftwareEncoder),
     AlternateServer(AlternateServerEncoder),
     Fingerprint(FingerprintEncoder),
+
+    // RFC 5766
+    ChannelNumber(ChannelNumberEncoder),
+    Lifetime(LifetimeEncoder),
+    XorPeerAddress(XorPeerAddressEncoder),
+    Data(DataEncoder),
+    XorRelayAddress(XorRelayAddressEncoder),
+    EvenPort(EvenPortEncoder),
+    RequestedTransport(RequestedTransportEncoder),
+    DontFragment(DontFragmentEncoder),
+    ReservationToken(ReservationTokenEncoder),
+
     None,
 }
 impl Default for AttributeEncoderInner {
@@ -311,6 +369,7 @@ impl Default for AttributeEncoderInner {
         AttributeEncoderInner::None
     }
 }
+
 impl_attribute_encoder_inner!(
     [MappedAddress, MappedAddressEncoder],
     [Username, UsernameEncoder],
@@ -322,5 +381,14 @@ impl_attribute_encoder_inner!(
     [XorMappedAddress, XorMappedAddressEncoder],
     [Software, SoftwareEncoder],
     [AlternateServer, AlternateServerEncoder],
-    [Fingerprint, FingerprintEncoder]
+    [Fingerprint, FingerprintEncoder],
+    [ChannelNumber, ChannelNumberEncoder],
+    [Lifetime, LifetimeEncoder],
+    [XorPeerAddress, XorPeerAddressEncoder],
+    [Data, DataEncoder],
+    [XorRelayAddress, XorRelayAddressEncoder],
+    [EvenPort, EvenPortEncoder],
+    [RequestedTransport, RequestedTransportEncoder],
+    [DontFragment, DontFragmentEncoder],
+    [ReservationToken, ReservationTokenEncoder]
 );
