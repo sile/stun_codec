@@ -1,6 +1,6 @@
 stun_codec
 ===========
-[![stun_codec](http://meritbadge.herokuapp.com/stun_codec)](https://crates.io/crates/stun_codec)
+[![stun_codec](https://img.shields.io/crates/v/stun_codec.svg)](https://crates.io/crates/stun_codec)
 [![Documentation](https://docs.rs/stun_codec/badge.svg)](https://docs.rs/stun_codec)
 [![Build Status](https://travis-ci.org/sile/stun_codec.svg?branch=master)](https://travis-ci.org/sile/stun_codec)
 [![Code Coverage](https://codecov.io/gh/sile/stun_codec/branch/master/graph/badge.svg)](https://codecov.io/gh/sile/stun_codec/branch/master)
