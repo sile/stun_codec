@@ -6,7 +6,7 @@ stun_codec
 [![Code Coverage](https://codecov.io/gh/sile/stun_codec/branch/master/graph/badge.svg)](https://codecov.io/gh/sile/stun_codec/branch/master)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Encoders and decoders for [STUN (RFC 5389)][RFC 5389].
+Encoders and decoders for [STUN (RFC 5389)][RFC 5389] and its extensions.
 
 [Documentation](https://docs.rs/stun_codec)
 
