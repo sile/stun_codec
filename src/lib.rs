@@ -100,7 +100,7 @@ mod tests {
     #[test]
     fn it_works() -> Result<(), MainError> {
         let mut message = Message::new(MessageClass::Request, BINDING, TransactionId::new([3; 12]));
-        message.push_attribute(Attribute::Software(Software::new("foo".to_owned())?));
+        message.add_attribute(Attribute::Software(Software::new("foo".to_owned())?));
 
         let mut encoder = MessageEncoder::new();
         let bytes = encoder.encode_into_bytes(message.clone())?;
