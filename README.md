@@ -21,7 +21,7 @@ use stun_codec::rfc5389::{attributes::Software, methods::BINDING, Attribute};
 
 // Creates a message
 let mut message = Message::new(MessageClass::Request, BINDING, TransactionId::new([3; 12]));
-message.push_attribute(Attribute::Software(Software::new("foo".to_owned())?));
+message.add_attribute(Attribute::Software(Software::new("foo".to_owned())?));
 
 // Encodes the message
 let mut encoder = MessageEncoder::new();

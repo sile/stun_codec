@@ -12,7 +12,7 @@
 //! # fn main() -> bytecodec::Result<()> {
 //! // Creates a message
 //! let mut message = Message::new(MessageClass::Request, BINDING, TransactionId::new([3; 12]));
-//! message.push_attribute(Attribute::Software(Software::new("foo".to_owned())?));
+//! message.add_attribute(Attribute::Software(Software::new("foo".to_owned())?));
 //!
 //! // Encodes the message
 //! let mut encoder = MessageEncoder::new();
@@ -60,6 +60,9 @@ pub use attribute::{
 pub use message::{BrokenMessage, Message, MessageClass, MessageDecoder, MessageEncoder};
 pub use method::Method;
 pub use transaction_id::TransactionId;
+
+#[macro_use]
+mod macros;
 
 pub mod net;
 pub mod rfc5389;
