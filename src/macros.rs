@@ -60,11 +60,6 @@ macro_rules! define_attribute_enums {
                 $decoder::None
             }
         }
-        $(impl From<<$variant as $crate::Attribute>::Decoder> for $decoder {
-            fn from(f: <$variant as $crate::Attribute>::Decoder) -> Self {
-                $decoder::$variant(f)
-            }
-        })*
         impl ::bytecodec::Decode for $decoder {
             type Item = $attr;
 
@@ -103,7 +98,7 @@ macro_rules! define_attribute_enums {
 
             fn try_start_decoding(&mut self, tag: Self::Tag) -> ::bytecodec::Result<bool> {
                 *self = match tag.as_u16() {
-                    $($variant::CODEPOINT => <$variant as $crate::Attribute>::Decoder::default().into()),*,
+                    $($variant::CODEPOINT => $decoder::$variant(<$variant as $crate::Attribute>::Decoder::default())),*,
                     _ => return Ok(false),
                 };
                 Ok(true)
@@ -128,11 +123,6 @@ macro_rules! define_attribute_enums {
                 $encoder::None
             }
         }
-        $(impl From<<$variant as $crate::Attribute>::Encoder> for $encoder {
-            fn from(f: <$variant as $crate::Attribute>::Encoder) -> Self {
-                $encoder::$variant(f)
-            }
-        })*
         impl ::bytecodec::Encode for $encoder {
             type Item = $attr;
 
@@ -149,7 +139,7 @@ macro_rules! define_attribute_enums {
                     $($attr::$variant(a) => {
                         let mut encoder = <$variant as $crate::Attribute>::Encoder::default();
                         track!(encoder.start_encoding(a), "attr={}", stringify!($variant))?;
-                        encoder.into()
+                        $encoder::$variant(encoder)
                     }),*
                 };
                 Ok(())
