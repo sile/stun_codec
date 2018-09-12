@@ -259,8 +259,8 @@ impl Fingerprint {
     pub const CODEPOINT: u16 = 0x8028;
 
     /// Calculates the CRC-32 value of `message` and returns a `Fingerprint` instance containing it.
-    pub fn new<A: Attribute>(message: Message<A>) -> Result<Self> {
-        let mut bytes = track!(MessageEncoder::default().encode_into_bytes(message))?;
+    pub fn new<A: Attribute>(message: &Message<A>) -> Result<Self> {
+        let mut bytes = track!(MessageEncoder::default().encode_into_bytes(message.clone()))?;
         let final_len = bytes.len() as u16 - 20 + 8; // Adds `Fingerprint` attribute length
         BigEndian::write_u16(&mut bytes[2..4], final_len);
         let crc32 = crc32::checksum_ieee(&bytes[..]) ^ 0x5354_554e;
@@ -281,7 +281,7 @@ impl Attribute for Fingerprint {
     }
 
     fn after_decode<A: Attribute>(&mut self, message: &Message<A>) -> Result<()> {
-        let actual = track!(Self::new(message.clone()))?;
+        let actual = track!(Self::new(message))?;
         track_assert_eq!(actual.crc32, self.crc32, ErrorKind::InvalidInput);
         Ok(())
     }
@@ -395,12 +395,12 @@ impl MessageIntegrity {
     pub const CODEPOINT: u16 = 0x0008;
 
     /// Makes a new `MessageIntegrity` instance for short-term credentials.
-    pub fn new_short_term_credential<A>(message: Message<A>, password: &str) -> Result<Self>
+    pub fn new_short_term_credential<A>(message: &Message<A>, password: &str) -> Result<Self>
     where
         A: Attribute,
     {
         let key = password.as_bytes();
-        let preceding_message_bytes = track!(Self::message_into_bytes(message))?;
+        let preceding_message_bytes = track!(Self::message_into_bytes(message.clone()))?;
         let hmac_sha1 = hmac_sha1(key, &preceding_message_bytes);
         Ok(MessageIntegrity {
             hmac_sha1,
@@ -410,7 +410,7 @@ impl MessageIntegrity {
 
     /// Makes a new `MessageIntegrity` instance for long-term credentials.
     pub fn new_long_term_credential<A>(
-        message: Message<A>,
+        message: &Message<A>,
         username: &Username,
         realm: &Realm,
         password: &str,
@@ -420,7 +420,7 @@ impl MessageIntegrity {
     {
         let key =
             md5::compute(format!("{}:{}:{}", username.name(), realm.text(), password).as_bytes());
-        let preceding_message_bytes = track!(Self::message_into_bytes(message))?;
+        let preceding_message_bytes = track!(Self::message_into_bytes(message.clone()))?;
         let hmac_sha1 = hmac_sha1(&key.0[..], &preceding_message_bytes);
         Ok(MessageIntegrity {
             hmac_sha1,
