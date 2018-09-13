@@ -446,6 +446,7 @@ impl<A: Attribute> Decode for MessageDecoder<A> {
 /// [`Message`] encoder.
 ///
 /// [`Message`]: ./struct.Message.html
+#[derive(Debug)]
 pub struct MessageEncoder<A: Attribute> {
     message_type: U16beEncoder,
     message_len: U16beEncoder,
