@@ -12,6 +12,11 @@ use attribute::{
 use constants::MAGIC_COOKIE;
 use {Method, TransactionId};
 
+/// Message decoded by [`MessageDecoder`].
+///
+/// [`MessageDecoder`]: ./struct.MessageDecoder.html
+pub type DecodedMessage<A> = std::result::Result<Message<A>, BrokenMessage>;
+
 /// The class of a message.
 #[allow(missing_docs)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -400,7 +405,7 @@ impl<A: Attribute> Default for MessageDecoder<A> {
     }
 }
 impl<A: Attribute> Decode for MessageDecoder<A> {
-    type Item = std::result::Result<Message<A>, BrokenMessage>;
+    type Item = DecodedMessage<A>;
 
     fn decode(&mut self, buf: &[u8], eos: Eos) -> Result<usize> {
         let mut offset = 0;

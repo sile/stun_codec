@@ -57,7 +57,9 @@ extern crate trackable;
 pub use attribute::{
     Attribute, AttributeType, RawAttribute, RawAttributeDecoder, RawAttributeEncoder,
 };
-pub use message::{BrokenMessage, Message, MessageClass, MessageDecoder, MessageEncoder};
+pub use message::{
+    BrokenMessage, DecodedMessage, Message, MessageClass, MessageDecoder, MessageEncoder,
+};
 pub use method::Method;
 pub use transaction_id::TransactionId;
 
