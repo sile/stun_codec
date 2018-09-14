@@ -10,6 +10,7 @@ use attribute::{
     Attribute, LosslessAttribute, LosslessAttributeDecoder, LosslessAttributeEncoder, RawAttribute,
 };
 use constants::MAGIC_COOKIE;
+use convert::TryAsRef;
 use {Method, TransactionId};
 
 /// Message decoded by [`MessageDecoder`].
@@ -189,6 +190,17 @@ impl<A: Attribute> Message<A> {
     /// Returns the transaction ID of the message.
     pub fn transaction_id(&self) -> TransactionId {
         self.transaction_id
+    }
+
+    /// Returns a reference to the first occurance of `T` attribute in the attributes of the message.
+    ///
+    /// If there is no such attribute, this method will return `None`.
+    pub fn get_attribute<T>(&self) -> Option<&T>
+    where
+        T: Attribute,
+        A: TryAsRef<T>,
+    {
+        self.attributes().filter_map(|a| a.try_as_ref()).nth(0)
     }
 
     /// Returns an iterator that iterates over the known attributes in the message.

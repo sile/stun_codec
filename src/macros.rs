@@ -13,6 +13,15 @@ macro_rules! define_attribute_enums {
                 $attr::$variant(f)
             }
         })*
+        $(impl $crate::convert::TryAsRef<$variant> for $attr {
+            fn try_as_ref(&self) -> Option<&$variant> {
+                if let $attr::$variant(a) = self {
+                    Some(a)
+                } else {
+                    None
+                }
+            }
+        })*
         impl $crate::Attribute for $attr {
             type Decoder = $decoder;
             type Encoder = $encoder;

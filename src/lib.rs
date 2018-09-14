@@ -66,6 +66,7 @@ pub use transaction_id::TransactionId;
 #[macro_use]
 mod macros;
 
+pub mod convert;
 pub mod net;
 pub mod rfc5389;
 pub mod rfc5766;
@@ -89,15 +90,7 @@ mod tests {
     macro_rules! get_attr {
         ($message:expr, $attr:ident) => {
             $message
-                .attributes()
-                .filter_map(|a| {
-                    if let Attribute::$attr(a) = a {
-                        Some(a)
-                    } else {
-                        None
-                    }
-                })
-                .nth(0)
+                .get_attribute::<rfc5389::attributes::$attr>()
                 .unwrap()
         };
     }
