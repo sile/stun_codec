@@ -109,6 +109,25 @@ impl ChannelNumber {
     pub fn value(self) -> u16 {
         self.0
     }
+
+    /// Returns the minimum channel number.
+    pub fn min() -> Self {
+        ChannelNumber(Self::MIN)
+    }
+
+    /// Returns the maximum channel number.
+    pub fn max() -> Self {
+        ChannelNumber(Self::MAX)
+    }
+
+    /// Wrapping incrementation.
+    pub fn wrapping_increment(self) -> Self {
+        if self.0 == Self::MAX {
+            Self::min()
+        } else {
+            ChannelNumber(self.0 + 1)
+        }
+    }
 }
 impl Attribute for ChannelNumber {
     type Decoder = ChannelNumberDecoder;
