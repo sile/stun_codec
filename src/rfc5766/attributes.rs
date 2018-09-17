@@ -80,19 +80,33 @@ macro_rules! impl_encode {
 /// See [RFC 5766 -- 14.1. CHANNEL-NUMBER] about this attribute.
 ///
 /// [RFC 5766 -- 14.1. CHANNEL-NUMBER]: https://tools.ietf.org/html/rfc5766#section-14.1
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ChannelNumber(u16);
 impl ChannelNumber {
     /// The codepoint of the type of the attribute.
     pub const CODEPOINT: u16 = 0x000C;
 
+    /// Minimum channel number.
+    pub const MIN: u16 = 0x4000;
+
+    /// Maximum channel number.
+    pub const MAX: u16 = 0x7FFF;
+
     /// Makes a new `ChannelNumber` instance.
-    pub fn new(channel_number: u16) -> Self {
-        ChannelNumber(channel_number)
+    ///
+    ///
+    /// # Errors
+    ///
+    /// If `n` is not a number between `ChannelNumber::MIN` and `ChannelNumber::MAX`,
+    /// this will return an `ErrorKind::InvalidInput` error.
+    pub fn new(n: u16) -> Result<Self> {
+        track_assert!(n >= Self::MIN, ErrorKind::InvalidInput; n);
+        track_assert!(n <= Self::MAX, ErrorKind::InvalidInput; n);
+        Ok(ChannelNumber(n))
     }
 
     /// Returns the channel number indicated by the attribute.
-    pub fn channel_number(&self) -> u16 {
+    pub fn value(self) -> u16 {
         self.0
     }
 }
@@ -116,8 +130,8 @@ impl ChannelNumberDecoder {
         Self::default()
     }
 }
-impl_decode!(ChannelNumberDecoder, ChannelNumber, |item| Ok(
-    ChannelNumber((item >> 16) as u16)
+impl_decode!(ChannelNumberDecoder, ChannelNumber, |item| track!(
+    ChannelNumber::new((item >> 16) as u16)
 ));
 
 /// [`ChannelNumber`] encoder.
@@ -473,11 +487,9 @@ impl EvenPortEncoder {
         Self::default()
     }
 }
-impl_encode!(
-    EvenPortEncoder,
-    EvenPort,
-    |item: Self::Item| u8::from(item.0) << 7
-);
+impl_encode!(EvenPortEncoder, EvenPort, |item: Self::Item| u8::from(
+    item.0
+) << 7);
 
 /// `REQUESTED-TRANSPORT` attribute.
 ///
