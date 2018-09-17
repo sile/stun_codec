@@ -1,6 +1,6 @@
 [package]
 name = "stun_codec"
-version = "0.1.8"
+version = "0.1.9"
 authors = ["Takeru Ohta <phjgt308@gmail.com>"]
 description = "Encoders and decoders for STUN (RFC 5389) and its extensions"
 homepage = "https://github.com/sile/stun_codec"
@@ -19,5 +19,5 @@ bytecodec = "0.4"
 byteorder = "1"
 crc = "1"
 hmac-sha1 = "0.1"
-md5 = "0.3"
+md5 = "0.4"
 trackable = "0.2"
