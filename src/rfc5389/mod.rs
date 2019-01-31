@@ -20,6 +20,7 @@ define_attribute_enums!(
         Realm,
         Nonce,
         XorMappedAddress,
+        XorMappedAddress2,
         Software,
         AlternateServer,
         Fingerprint
