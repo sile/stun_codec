@@ -935,3 +935,73 @@ impl_encode!(
     XorMappedAddress,
     |item: Self::Item| item.0
 );
+
+/// `XOR-MAPPED-ADDRESS` attribute with an alternative code.
+///
+/// Such attribute is returned by e.g. "Vovida.org 0.98-CPC" on stun.counterpath.net
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct XorMappedAddress2(SocketAddr);
+impl XorMappedAddress2 {
+    /// The codepoint of the type of the attribute.
+    pub const CODEPOINT: u16 = 0x8020;
+
+    /// Makes a new `XorMappedAddress2` instance.
+    pub fn new(addr: SocketAddr) -> Self {
+        XorMappedAddress2(addr)
+    }
+
+    /// Returns the address of this instance.
+    pub fn address(&self) -> SocketAddr {
+        self.0
+    }
+}
+impl Attribute for XorMappedAddress2 {
+    type Decoder = XorMappedAddress2Decoder;
+    type Encoder = XorMappedAddress2Encoder;
+
+    fn get_type(&self) -> AttributeType {
+        AttributeType::new(Self::CODEPOINT)
+    }
+
+    fn before_encode<A: Attribute>(&mut self, message: &Message<A>) -> Result<()> {
+        self.0 = socket_addr_xor(self.0, message.transaction_id());
+        Ok(())
+    }
+
+    fn after_decode<A: Attribute>(&mut self, message: &Message<A>) -> Result<()> {
+        self.0 = socket_addr_xor(self.0, message.transaction_id());
+        Ok(())
+    }
+}
+
+/// [`XorMappedAddress2`] decoder.
+///
+/// [`XorMappedAddress2`]: ./struct.XorMappedAddress.html
+#[derive(Debug, Default)]
+pub struct XorMappedAddress2Decoder(SocketAddrDecoder);
+impl XorMappedAddress2Decoder {
+    /// Makes a new `XorMappedAddressDecoder` instance.
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+impl_decode!(XorMappedAddress2Decoder, XorMappedAddress2, |item| Ok(
+    XorMappedAddress2(item)
+));
+
+/// [`XorMappedAddress`] encoder.
+///
+/// [`XorMappedAddress`]: ./struct.XorMappedAddress.html
+#[derive(Debug, Default)]
+pub struct XorMappedAddress2Encoder(SocketAddrEncoder);
+impl XorMappedAddress2Encoder {
+    /// Makes a new `XorMappedAddressEncoder` instance.
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+impl_encode!(
+    XorMappedAddress2Encoder,
+    XorMappedAddress2,
+    |item: Self::Item| item.0
+);
