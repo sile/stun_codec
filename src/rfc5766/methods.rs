@@ -1,7 +1,7 @@
 //! Methods that are defined in [RFC 5766 -- 13. New STUN Methods].
 //!
 //! [RFC 5766 -- 13. New STUN Methods]: https://tools.ietf.org/html/rfc5766#section-13
-use Method;
+use crate::Method;
 
 /// Allocate method.
 ///

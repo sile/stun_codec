@@ -1,6 +1,10 @@
 //! Attributes that are defined in [RFC 5389].
 //!
 //! [RFC 5389]: https://tools.ietf.org/html/rfc5389
+use crate::attribute::{Attribute, AttributeType};
+use crate::message::{Message, MessageEncoder};
+use crate::net::{socket_addr_xor, SocketAddrDecoder, SocketAddrEncoder};
+use crate::rfc5389::errors;
 use bytecodec::bytes::{BytesEncoder, CopyableBytesDecoder, Utf8Decoder, Utf8Encoder};
 use bytecodec::combinator::{Collect, PreEncode, Repeat};
 use bytecodec::fixnum::{U16beDecoder, U16beEncoder, U32beDecoder, U32beEncoder};
@@ -16,11 +20,6 @@ use md5;
 use std;
 use std::net::SocketAddr;
 use std::vec;
-
-use attribute::{Attribute, AttributeType};
-use message::{Message, MessageEncoder};
-use net::{socket_addr_xor, SocketAddrDecoder, SocketAddrEncoder};
-use rfc5389::errors;
 
 macro_rules! impl_decode {
     ($decoder:ty, $item:ident, $and_then:expr) => {

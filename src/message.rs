@@ -1,3 +1,9 @@
+use crate::attribute::{
+    Attribute, LosslessAttribute, LosslessAttributeDecoder, LosslessAttributeEncoder, RawAttribute,
+};
+use crate::constants::MAGIC_COOKIE;
+use crate::convert::TryAsRef;
+use crate::{Method, TransactionId};
 use bytecodec::bytes::{BytesEncoder, CopyableBytesDecoder};
 use bytecodec::combinator::{Collect, Length, Peekable, PreEncode, Repeat};
 use bytecodec::fixnum::{U16beDecoder, U16beEncoder, U32beDecoder, U32beEncoder};
@@ -5,13 +11,6 @@ use bytecodec::{ByteCount, Decode, Encode, Eos, Error, ErrorKind, Result, SizedE
 use std;
 use std::vec;
 use trackable::error::ErrorKindExt;
-
-use attribute::{
-    Attribute, LosslessAttribute, LosslessAttributeDecoder, LosslessAttributeEncoder, RawAttribute,
-};
-use constants::MAGIC_COOKIE;
-use convert::TryAsRef;
-use {Method, TransactionId};
 
 /// Message decoded by [`MessageDecoder`].
 ///
@@ -585,14 +584,13 @@ impl Type {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::rfc5389::attributes::MappedAddress;
+    use crate::rfc5389::methods::BINDING;
+    use crate::{MessageClass, TransactionId};
     use bytecodec::DecodeExt;
     use std;
     use trackable::error::MainError;
-
-    use super::*;
-    use rfc5389::attributes::MappedAddress;
-    use rfc5389::methods::BINDING;
-    use {MessageClass, TransactionId};
 
     #[test]
     fn message_class_from_u8_works() {

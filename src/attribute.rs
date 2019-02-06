@@ -1,10 +1,9 @@
+use crate::message::Message;
 use bytecodec::bytes::{BytesDecoder, BytesEncoder, RemainingBytesDecoder};
 use bytecodec::combinator::{Length, Peekable};
 use bytecodec::fixnum::{U16beDecoder, U16beEncoder};
 use bytecodec::{ByteCount, Decode, Encode, Eos, ErrorKind, Result, SizedEncode, TryTaggedDecode};
 use std::fmt;
-
-use message::Message;
 
 /// STUN attribute.
 ///

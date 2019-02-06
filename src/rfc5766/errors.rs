@@ -1,7 +1,7 @@
 //! Error codes that are defined in [RFC 5766 -- 15. New STUN Error Response Codes].
 //!
 //! [RFC 5766 -- 15. New STUN Error Response Codes]: https://tools.ietf.org/html/rfc5766#section-15
-use rfc5389::attributes::ErrorCode;
+use crate::rfc5389::attributes::ErrorCode;
 
 /// `403`: "Forbidden".
 ///

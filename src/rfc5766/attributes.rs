@@ -2,6 +2,9 @@
 //!
 //! [RFC 5766 -- 14. New STUN Attributes]: https://tools.ietf.org/html/rfc5766#section-14
 
+use crate::attribute::{Attribute, AttributeType};
+use crate::message::Message;
+use crate::net::{socket_addr_xor, SocketAddrDecoder, SocketAddrEncoder};
 use bytecodec::bytes::{BytesEncoder, RemainingBytesDecoder};
 use bytecodec::fixnum::{
     U32beDecoder, U32beEncoder, U64beDecoder, U64beEncoder, U8Decoder, U8Encoder,
@@ -10,10 +13,6 @@ use bytecodec::null::{NullDecoder, NullEncoder};
 use bytecodec::{ByteCount, Decode, Encode, Eos, ErrorKind, Result, SizedEncode, TryTaggedDecode};
 use std::net::SocketAddr;
 use std::time::Duration;
-
-use attribute::{Attribute, AttributeType};
-use message::Message;
-use net::{socket_addr_xor, SocketAddrDecoder, SocketAddrEncoder};
 
 macro_rules! impl_decode {
     ($decoder:ty, $item:ident, $and_then:expr) => {

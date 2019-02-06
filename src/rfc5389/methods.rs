@@ -1,7 +1,7 @@
 //! Methods that are defined in [RFC 5389].
 //!
 //! [RFC 5389]: https://tools.ietf.org/html/rfc5389
-use Method;
+use crate::Method;
 
 /// Binding method.
 ///

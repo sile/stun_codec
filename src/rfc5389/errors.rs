@@ -1,7 +1,7 @@
 //! Error codes that are defined in [RFC 5389 -- 15.6 ERROR-CODE].
 //!
 //! [RFC 5389 -- 15.6 ERROR-CODE]: https://tools.ietf.org/html/rfc5389#section-15.6
-use rfc5389::attributes::ErrorCode;
+use crate::rfc5389::attributes::ErrorCode;
 
 /// `300`: "Try Alternate".
 ///

@@ -15,14 +15,13 @@
 //!
 //! Family: IPv4=1, IPv6=2
 //! ```
+use crate::constants::MAGIC_COOKIE;
+use crate::TransactionId;
 use bytecodec::bytes::{BytesDecoder, BytesEncoder};
 use bytecodec::combinator::Peekable;
 use bytecodec::fixnum::{U16beDecoder, U16beEncoder, U8Decoder, U8Encoder};
 use bytecodec::{ByteCount, Decode, Encode, Eos, ErrorKind, Result, SizedEncode};
 use std::net::{IpAddr, SocketAddr};
-
-use constants::MAGIC_COOKIE;
-use TransactionId;
 
 const FAMILY_IPV4: u8 = 1;
 const FAMILY_IPV6: u8 = 2;

@@ -9,6 +9,7 @@ readme = "README.md"
 keywords = ["STUN"]
 categories = ["encoding"]
 license = "MIT"
+edition = "2018"
 
 [badges]
 travis-ci = {repository = "sile/stun_codec"}
