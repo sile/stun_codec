@@ -362,11 +362,13 @@ impl<T: Attribute> Decode for LosslessAttributeDecoder<T> {
     }
 
     fn is_idle(&self) -> bool {
-        self.value_len.is_idle() && if self.is_known {
-            self.known_value.is_idle()
-        } else {
-            self.unknown_value.is_idle()
-        } && self.padding.is_idle()
+        self.value_len.is_idle()
+            && if self.is_known {
+                self.known_value.is_idle()
+            } else {
+                self.unknown_value.is_idle()
+            }
+            && self.padding.is_idle()
     }
 }
 

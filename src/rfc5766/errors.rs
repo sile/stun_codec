@@ -41,7 +41,8 @@ impl From<AllocationMismatch> for ErrorCode {
         ErrorCode::new(
             AllocationMismatch::CODEPOINT,
             "Allocation Mismatch".to_owned(),
-        ).expect("never fails")
+        )
+        .expect("never fails")
     }
 }
 
@@ -84,7 +85,8 @@ impl From<UnsupportedTransportProtocol> for ErrorCode {
         ErrorCode::new(
             UnsupportedTransportProtocol::CODEPOINT,
             "Unsupported Transport Protocol".to_owned(),
-        ).expect("never fails")
+        )
+        .expect("never fails")
     }
 }
 
@@ -106,7 +108,8 @@ impl From<AllocationQuotaReached> for ErrorCode {
         ErrorCode::new(
             AllocationQuotaReached::CODEPOINT,
             "Allocation Quota Reached".to_owned(),
-        ).expect("never fails")
+        )
+        .expect("never fails")
     }
 }
 
@@ -131,6 +134,7 @@ impl From<InsufficientCapacity> for ErrorCode {
         ErrorCode::new(
             InsufficientCapacity::CODEPOINT,
             "Insufficient Capacity".to_owned(),
-        ).expect("never fails")
+        )
+        .expect("never fails")
     }
 }

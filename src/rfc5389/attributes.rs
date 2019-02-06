@@ -210,22 +210,21 @@ impl ErrorCodeDecoder {
         Self::default()
     }
 }
-impl_decode!(
-    ErrorCodeDecoder,
-    ErrorCode,
-    |(value, reason_phrase): (u32, _)| {
-        let class = (value >> 8) & 0b111;
-        let number = value & 0b1111_1111;
-        track_assert!(3 <= class && class < 6, ErrorKind::InvalidInput);
-        track_assert!(number < 100, ErrorKind::InvalidInput);
+impl_decode!(ErrorCodeDecoder, ErrorCode, |(value, reason_phrase): (
+    u32,
+    _
+)| {
+    let class = (value >> 8) & 0b111;
+    let number = value & 0b1111_1111;
+    track_assert!(3 <= class && class < 6, ErrorKind::InvalidInput);
+    track_assert!(number < 100, ErrorKind::InvalidInput);
 
-        let code = (class * 100 + number) as u16;
-        Ok(ErrorCode {
-            code,
-            reason_phrase,
-        })
-    }
-);
+    let code = (class * 100 + number) as u16;
+    Ok(ErrorCode {
+        code,
+        reason_phrase,
+    })
+});
 
 /// [`ErrorCode`] encoder.
 ///
@@ -766,13 +765,13 @@ impl UnknownAttributesDecoder {
         Self::default()
     }
 }
-impl_decode!(
-    UnknownAttributesDecoder,
-    UnknownAttributes,
-    |vs: Vec<u16>| Ok(UnknownAttributes {
+impl_decode!(UnknownAttributesDecoder, UnknownAttributes, |vs: Vec<
+    u16,
+>| Ok(
+    UnknownAttributes {
         unknowns: vs.into_iter().map(AttributeType::new).collect()
-    })
-);
+    }
+));
 
 /// [`UnknownAttributes`] encoder.
 ///
