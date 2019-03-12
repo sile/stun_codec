@@ -64,6 +64,7 @@ mod macros;
 
 pub mod convert;
 pub mod net;
+pub mod rfc5245;
 pub mod rfc5389;
 pub mod rfc5766;
 
