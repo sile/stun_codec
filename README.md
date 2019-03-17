@@ -47,8 +47,10 @@ assert!(decoded.attributes().eq(message.attributes()));
 References
 ----------
 
+- [RFC 5245 - Interactive Connectivity Establishment (ICE)[RFC 5245]
 - [RFC 5389 - Session Traversal Utilities for NAT (STUN)][RFC 5389]
 - [RFC 5769 - Test Vectors for Session Traversal Utilities for NAT (STUN)][RFC 5769]
 
+[RFC 5245]: https://tools.ietf.org/html/rfc5245
 [RFC 5389]: https://tools.ietf.org/html/rfc5389
 [RFC 5769]: https://tools.ietf.org/html/rfc5769
