@@ -36,13 +36,46 @@
 //! # }
 //! ```
 //!
+//! # Define your own attribute enum
+//!
+//! By using [`define_attribute_enums!`](./macro.define_attribute_enums.html) macro,
+//! you can easily define an enum that includes arbitrary attributes.
+//!
+//! The following is an example taken from [`rusturn`][rusturn-attributes] crate:
+//! ```
+//! #[macro_use] extern crate trackable;
+//!
+//! use stun_codec::define_attribute_enums;
+//! use stun_codec::rfc5389::attributes::*;
+//! use stun_codec::rfc5766::attributes::*;
+//!
+//! define_attribute_enums!(
+//!     Attribute, AttributeDecoder, AttributeEncoder,
+//!     [
+//!         // RFC 5389
+//!         MappedAddress, Username, MessageIntegrity, ErrorCode,
+//!         UnknownAttributes, Realm, Nonce, XorMappedAddress,
+//!         Software, AlternateServer, Fingerprint,
+//!
+//!         // RFC 5766
+//!         ChannelNumber, Lifetime, XorPeerAddress, Data,
+//!         XorRelayAddress, EvenPort, RequestedTransport,
+//!         DontFragment, ReservationToken
+//!     ]
+//! );
+//! ```
+//!
+//! [rusturn-attributes]: https://github.com/sile/rusturn/blob/8efe92b7b63fa85a77664045f4a3bf172a3083ed/src/attribute.rs
+//!
 //! # References
 //!
 //! - [RFC 5389 - Session Traversal Utilities for NAT (STUN)][RFC 5389]
 //! - [RFC 5769 - Test Vectors for Session Traversal Utilities for NAT (STUN)][RFC 5769]
+//! - [RFC 5245 - Interactive Connectivity Establishment (ICE)][RFC 5245]
 //!
 //! [RFC 5389]: https://tools.ietf.org/html/rfc5389
 //! [RFC 5769]: https://tools.ietf.org/html/rfc5769
+//! [RFC 5245]: https://tools.ietf.org/html/rfc5245
 #![warn(missing_docs)]
 
 #[macro_use]
