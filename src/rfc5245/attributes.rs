@@ -148,6 +148,11 @@ impl Attribute for UseCandidate {
         AttributeType::new(Self::CODEPOINT)
     }
 }
+impl Default for UseCandidate {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 /// [`UseCandidate`] decoder.
 ///
