@@ -2,25 +2,9 @@
 //!
 //! [RFC 5245]: https://tools.ietf.org/html/rfc5245
 use crate::attribute::{Attribute, AttributeType};
-use crate::message::{Message, MessageEncoder};
-use crate::net::{socket_addr_xor, SocketAddrDecoder, SocketAddrEncoder};
-use crate::rfc5245::errors;
-use bytecodec::bytes::{BytesEncoder, CopyableBytesDecoder, Utf8Decoder, Utf8Encoder};
-use bytecodec::combinator::{Collect, PreEncode, Repeat};
-use bytecodec::fixnum::{U16beDecoder, U16beEncoder, U32beDecoder, U32beEncoder, U64beDecoder, U64beEncoder};
-use bytecodec::tuple::{TupleDecoder, TupleEncoder};
+use bytecodec::fixnum::{U32beDecoder, U32beEncoder, U64beDecoder, U64beEncoder};
 use bytecodec::null::{NullDecoder, NullEncoder};
-use bytecodec::{
-    ByteCount, Decode, Encode, EncodeExt, Eos, Error, ErrorKind, Result, SizedEncode,
-    TryTaggedDecode,
-};
-use byteorder::{BigEndian, ByteOrder};
-use crc::crc32;
-use hmacsha1::hmac_sha1;
-use md5;
-use std;
-use std::net::SocketAddr;
-use std::vec;
+use bytecodec::{ByteCount, Decode, Encode, Eos, Result, SizedEncode, TryTaggedDecode};
 
 macro_rules! impl_decode {
     ($decoder:ty, $item:ident, $and_then:expr) => {
@@ -138,8 +122,7 @@ impl PriorityEncoder {
         Self::default()
     }
 }
-impl_encode!(PriorityEncoder, Priority, |item: Self::Item| item
-    .0);
+impl_encode!(PriorityEncoder, Priority, |item: Self::Item| item.0);
 
 /// `USE-CANDIDATE` attribute.
 ///
@@ -192,7 +175,7 @@ impl UseCandidateEncoder {
         Self::default()
     }
 }
-impl_encode!(UseCandidateEncoder, UseCandidate, |item: Self::Item| ());
+impl_encode!(UseCandidateEncoder, UseCandidate, |_item: Self::Item| ());
 
 /// `ICE-CONTROLLED` attribute.
 ///
@@ -236,7 +219,9 @@ impl IceControlledDecoder {
         Self::default()
     }
 }
-impl_decode!(IceControlledDecoder, IceControlled, |prio| Ok(IceControlled(prio)));
+impl_decode!(IceControlledDecoder, IceControlled, |prio| Ok(
+    IceControlled(prio)
+));
 
 /// [`IceControlled`] encoder.
 ///
@@ -295,7 +280,9 @@ impl IceControllingDecoder {
         Self::default()
     }
 }
-impl_decode!(IceControllingDecoder, IceControlling, |prio| Ok(IceControlling(prio)));
+impl_decode!(IceControllingDecoder, IceControlling, |prio| Ok(
+    IceControlling(prio)
+));
 
 /// [`IceControlling`] encoder.
 ///
@@ -309,5 +296,6 @@ impl IceControllingEncoder {
         Self::default()
     }
 }
-impl_encode!(IceControllingEncoder, IceControlling, |item: Self::Item| item
-    .0);
+impl_encode!(IceControllingEncoder, IceControlling, |item: Self::Item| {
+    item.0
+});

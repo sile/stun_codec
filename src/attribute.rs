@@ -5,6 +5,113 @@ use bytecodec::fixnum::{U16beDecoder, U16beEncoder};
 use bytecodec::{ByteCount, Decode, Encode, Eos, ErrorKind, Result, SizedEncode, TryTaggedDecode};
 use std::fmt;
 
+use crate::{rfc5389, rfc5766};
+
+#[derive(Debug)]
+pub enum MyAttribute {
+    Rfc5389(rfc5389::Attribute),
+    Rfc5766(rfc5766::Attribute),
+}
+
+#[derive(Debug, Default)]
+pub struct MyAttributeDecoder {
+    rfc5389: rfc5389::AttributeDecoder,
+    rfc5766: rfc5766::AttributeDecoder,
+    index: usize,
+}
+impl Decode for MyAttributeDecoder {
+    type Item = MyAttribute;
+
+    fn decode(&mut self, buf: &[u8], eos: Eos) -> Result<usize> {
+        match self.index {
+            1 => track!(self.rfc5389.decode(buf, eos)),
+            2 => track!(self.rfc5766.decode(buf, eos)),
+            _ => track_panic!(ErrorKind::InconsistentState),
+        }
+    }
+
+    fn finish_decoding(&mut self) -> Result<Self::Item> {
+        let item = match self.index {
+            1 => track!(self.rfc5389.finish_decoding()).map(MyAttribute::Rfc5389)?,
+            2 => track!(self.rfc5766.finish_decoding()).map(MyAttribute::Rfc5766)?,
+            _ => track_panic!(ErrorKind::InconsistentState),
+        };
+        self.index = 0;
+        Ok(item)
+    }
+
+    fn requiring_bytes(&self) -> ByteCount {
+        match self.index {
+            1 => self.rfc5389.requiring_bytes(),
+            2 => self.rfc5766.requiring_bytes(),
+            _ => ByteCount::Finite(0),
+        }
+    }
+
+    fn is_idle(&self) -> bool {
+        match self.index {
+            1 => self.rfc5389.is_idle(),
+            2 => self.rfc5766.is_idle(),
+            _ => true,
+        }
+    }
+}
+impl TryTaggedDecode for MyAttributeDecoder {
+    type Tag = AttributeType;
+
+    fn try_start_decoding(&mut self, tag: Self::Tag) -> Result<bool> {
+        track_assert_eq!(self.index, 0, ErrorKind::InconsistentState);
+        if track!(self.rfc5389.try_start_decoding(tag))? {
+            self.index = 1;
+            Ok(true)
+        } else if track!(self.rfc5766.try_start_decoding(tag))? {
+            self.index = 2;
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct MyAttributeEncoder {
+    rfc5389: rfc5389::AttributeEncoder,
+    rfc5766: rfc5766::AttributeEncoder,
+}
+impl Encode for MyAttributeEncoder {
+    type Item = MyAttribute;
+
+    fn encode(&mut self, buf: &mut [u8], eos: Eos) -> Result<usize> {
+        let mut offset = 0;
+        bytecodec_try_encode!(self.rfc5389, offset, buf, eos);
+        bytecodec_try_encode!(self.rfc5766, offset, buf, eos);
+        Ok(offset)
+    }
+
+    fn start_encoding(&mut self, item: Self::Item) -> Result<()> {
+        track_assert!(self.is_idle(), ErrorKind::EncoderFull);
+        match item {
+            MyAttribute::Rfc5389(item) => track!(self.rfc5389.start_encoding(item)),
+            MyAttribute::Rfc5766(item) => track!(self.rfc5766.start_encoding(item)),
+        }
+    }
+
+    fn requiring_bytes(&self) -> ByteCount {
+        self.rfc5389
+            .requiring_bytes()
+            .add_for_encoding(self.rfc5766.requiring_bytes())
+    }
+
+    fn is_idle(&self) -> bool {
+        self.rfc5389.is_idle() && self.rfc5766.is_idle()
+    }
+}
+impl SizedEncode for MyAttributeEncoder {
+    fn exact_requiring_bytes(&self) -> u64 {
+        self.rfc5389.exact_requiring_bytes() + self.rfc5766.exact_requiring_bytes()
+    }
+}
+
 /// STUN attribute.
 ///
 /// > **Attribute**:  The STUN term for a Type-Length-Value (TLV) object that
