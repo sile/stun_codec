@@ -266,6 +266,19 @@ struct MessageHeaderDecoder {
     magic_cookie: U32beDecoder,
     transaction_id: CopyableBytesDecoder<[u8; 12]>,
 }
+impl MessageHeaderDecoder {
+    fn check_magic_cookie(&self, magic_cookie: u32) -> Result<()> {
+        track_assert_eq!(
+            magic_cookie,
+            MAGIC_COOKIE,
+            ErrorKind::InvalidInput,
+            "Unexpected MAGIC_COOKIE: actual=0x{:08x}, expected=0x{:08x}",
+            magic_cookie,
+            MAGIC_COOKIE,
+        );
+        Ok(())
+    }
+}
 impl Decode for MessageHeaderDecoder {
     type Item = (Type, u16, TransactionId);
 
@@ -284,7 +297,7 @@ impl Decode for MessageHeaderDecoder {
         let message_len = track!(self.message_len.finish_decoding())?;
         let magic_cookie = track!(self.magic_cookie.finish_decoding())?;
         let transaction_id = TransactionId::new(track!(self.transaction_id.finish_decoding())?);
-        track_assert_eq!(magic_cookie, MAGIC_COOKIE, ErrorKind::InvalidInput);
+        track!(self.check_magic_cookie(magic_cookie); message_type, message_len, transaction_id)?;
         Ok((message_type, message_len, transaction_id))
     }
 
@@ -587,10 +600,10 @@ mod tests {
     use super::*;
     use crate::rfc5389::attributes::MappedAddress;
     use crate::rfc5389::methods::BINDING;
+    use crate::rfc5389::Attribute;
     use crate::{MessageClass, TransactionId};
     use bytecodec::DecodeExt;
-    use std;
-    use trackable::error::MainError;
+    use trackable::result::TestResult;
 
     #[test]
     fn message_class_from_u8_works() {
@@ -599,7 +612,7 @@ mod tests {
     }
 
     #[test]
-    fn decoder_fails_when_decoding_attributes() -> std::result::Result<(), MainError> {
+    fn decoder_fails_when_decoding_attributes() -> TestResult {
         let bytes = [
             0, 1, 0, 12, 33, 18, 164, 66, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 1, 0, 8, 0, 1, 0,
             80, 127, 0, /* 0, */ 1,
