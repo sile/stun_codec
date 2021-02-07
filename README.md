@@ -3,7 +3,7 @@ stun_codec
 [![stun_codec](https://img.shields.io/crates/v/stun_codec.svg)](https://crates.io/crates/stun_codec)
 [![Documentation](https://docs.rs/stun_codec/badge.svg)](https://docs.rs/stun_codec)
 [![Actions Status](https://github.com/sile/stun_codec/workflows/CI/badge.svg)](https://github.com/sile/stun_codec/actions)
-[![Coverage Status](https://coveralls.io/repos/github/sile/stun_codec/badge.svg?branch=main)](https://coveralls.io/github/sile/stun_codec?branch=main)
+[![Coverage Status](https://coveralls.io/repos/github/sile/stun_codec/badge.svg?branch=master)](https://coveralls.io/github/sile/stun_codec?branch=master)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Encoders and decoders for [STUN (RFC 5389)][RFC 5389] and its extensions.
@@ -50,7 +50,9 @@ References
 - [RFC 5245 - Interactive Connectivity Establishment (ICE)[RFC 5245]
 - [RFC 5389 - Session Traversal Utilities for NAT (STUN)][RFC 5389]
 - [RFC 5769 - Test Vectors for Session Traversal Utilities for NAT (STUN)][RFC 5769]
+- [RFC 5780 - NAT Behavior Discovery Using Session Traversal Utilities for NAT][RFC 5780]
 
 [RFC 5245]: https://tools.ietf.org/html/rfc5245
 [RFC 5389]: https://tools.ietf.org/html/rfc5389
 [RFC 5769]: https://tools.ietf.org/html/rfc5769
+[RFC 5780]: https://tools.ietf.org/html/rfc5780
