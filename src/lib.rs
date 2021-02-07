@@ -72,10 +72,12 @@
 //! - [RFC 5389 - Session Traversal Utilities for NAT (STUN)][RFC 5389]
 //! - [RFC 5769 - Test Vectors for Session Traversal Utilities for NAT (STUN)][RFC 5769]
 //! - [RFC 5245 - Interactive Connectivity Establishment (ICE)][RFC 5245]
+//! - [RFC 5780 - NAT Behavior Discovery Using Session Traversal Utilities for NAT][RFC 5780]
 //!
 //! [RFC 5389]: https://tools.ietf.org/html/rfc5389
 //! [RFC 5769]: https://tools.ietf.org/html/rfc5769
 //! [RFC 5245]: https://tools.ietf.org/html/rfc5245
+//! [RFC 5780]: https://tools.ietf.org/html/rfc5780
 #![warn(missing_docs)]
 
 #[macro_use]
@@ -100,6 +102,7 @@ pub mod net;
 pub mod rfc5245;
 pub mod rfc5389;
 pub mod rfc5766;
+pub mod rfc5780;
 
 mod attribute;
 mod constants;
