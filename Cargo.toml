@@ -12,8 +12,7 @@ license = "MIT"
 edition = "2018"
 
 [badges]
-travis-ci = {repository = "sile/stun_codec"}
-codecov = {repository = "sile/stun_codec"}
+coveralls = {repository = "sile/stun_codec"}
 
 [dependencies]
 bytecodec = "0.4"
