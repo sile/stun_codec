@@ -13,8 +13,6 @@ use std::vec;
 use trackable::error::ErrorKindExt;
 
 /// Message decoded by [`MessageDecoder`].
-///
-/// [`MessageDecoder`]: ./struct.MessageDecoder.html
 pub type DecodedMessage<A> = std::result::Result<Message<A>, BrokenMessage>;
 
 /// The class of a message.
@@ -222,8 +220,6 @@ impl<A: Attribute> Message<A> {
 }
 
 /// STUN message of which [`MessageDecoder`] could not decode the attribute part.
-///
-/// [`MessageDecoder`]: ./struct.MessageDecoder.html
 #[allow(missing_docs)]
 #[derive(Debug, Clone)]
 pub struct BrokenMessage {
@@ -375,8 +371,6 @@ impl<A: Attribute> Decode for AttributesDecoder<A> {
 }
 
 /// [`Message`] decoder.
-///
-/// [`Message`]: ./struct.Message.html
 #[derive(Debug)]
 pub struct MessageDecoder<A: Attribute> {
     header: Peekable<MessageHeaderDecoder>,
@@ -468,8 +462,6 @@ impl<A: Attribute> Decode for MessageDecoder<A> {
 }
 
 /// [`Message`] encoder.
-///
-/// [`Message`]: ./struct.Message.html
 #[derive(Debug)]
 pub struct MessageEncoder<A: Attribute> {
     message_type: U16beEncoder,

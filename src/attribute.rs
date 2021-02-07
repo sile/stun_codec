@@ -207,8 +207,6 @@ impl From<u16> for AttributeType {
 }
 
 /// An [`Attribute`] implementation that has raw value bytes.
-///
-/// [`Attribute`]: ./trait.Attribute.html
 #[derive(Debug, Clone)]
 pub struct RawAttribute {
     attr_type: AttributeType,
@@ -240,8 +238,6 @@ impl Attribute for RawAttribute {
 }
 
 /// [`RawAttribute`] decoder.
-///
-/// [`RawAttribute`]: ./struct.RawAttribute.html
 #[derive(Debug, Default)]
 pub struct RawAttributeDecoder {
     attr_type: Option<AttributeType>,
@@ -284,8 +280,6 @@ impl TryTaggedDecode for RawAttributeDecoder {
 }
 
 /// [`RawAttribute`] encoder.
-///
-/// [`RawAttribute`]: ./struct.RawAttribute.html
 #[derive(Debug, Default)]
 pub struct RawAttributeEncoder {
     value: BytesEncoder,

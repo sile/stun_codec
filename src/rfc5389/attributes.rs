@@ -112,8 +112,6 @@ impl Attribute for AlternateServer {
 }
 
 /// [`AlternateServer`] decoder.
-///
-/// [`AlternateServer`]: ./struct.AlternateServer.html
 #[derive(Debug, Default)]
 pub struct AlternateServerDecoder(SocketAddrDecoder);
 impl AlternateServerDecoder {
@@ -127,8 +125,6 @@ impl_decode!(AlternateServerDecoder, AlternateServer, |item| Ok(
 ));
 
 /// [`AlternateServer`] encoder.
-///
-/// [`AlternateServer`]: ./struct.AlternateServer.html
 #[derive(Debug, Default)]
 pub struct AlternateServerEncoder(SocketAddrEncoder);
 impl AlternateServerEncoder {
@@ -199,8 +195,6 @@ impl From<Error> for ErrorCode {
 }
 
 /// [`ErrorCode`] decoder.
-///
-/// [`ErrorCode`]: ./struct.ErrorCode.html
 #[derive(Debug, Default)]
 pub struct ErrorCodeDecoder(TupleDecoder<(U32beDecoder, Utf8Decoder)>);
 impl ErrorCodeDecoder {
@@ -226,8 +220,6 @@ impl_decode!(ErrorCodeDecoder, ErrorCode, |(value, reason_phrase): (
 });
 
 /// [`ErrorCode`] encoder.
-///
-/// [`ErrorCode`]: ./struct.ErrorCode.html
 #[derive(Debug, Default)]
 pub struct ErrorCodeEncoder(TupleEncoder<(U32beEncoder, Utf8Encoder)>);
 impl ErrorCodeEncoder {
@@ -286,8 +278,6 @@ impl Attribute for Fingerprint {
 }
 
 /// [`Fingerprint`] decoder.
-///
-/// [`Fingerprint`]: ./struct.Fingerprint.html
 #[derive(Debug, Default)]
 pub struct FingerprintDecoder(U32beDecoder);
 impl FingerprintDecoder {
@@ -301,8 +291,6 @@ impl_decode!(FingerprintDecoder, Fingerprint, |crc32| Ok(Fingerprint {
 }));
 
 /// [`Fingerprint`] encoder.
-///
-/// [`Fingerprint`]: ./struct.Fingerprint.html
 #[derive(Debug, Default)]
 pub struct FingerprintEncoder(U32beEncoder);
 impl FingerprintEncoder {
@@ -345,8 +333,6 @@ impl Attribute for MappedAddress {
 }
 
 /// [`MappedAddress`] decoder.
-///
-/// [`MappedAddress`]: ./struct.MappedAddress.html
 #[derive(Debug, Default)]
 pub struct MappedAddressDecoder(SocketAddrDecoder);
 impl MappedAddressDecoder {
@@ -360,8 +346,6 @@ impl_decode!(MappedAddressDecoder, MappedAddress, |item| Ok(
 ));
 
 /// [`MappedAddress`] encoder.
-///
-/// [`MappedAddress`]: ./struct.MappedAddress.html
 #[derive(Debug, Default)]
 pub struct MappedAddressEncoder(SocketAddrEncoder);
 impl MappedAddressEncoder {
@@ -484,8 +468,6 @@ impl Attribute for MessageIntegrity {
 }
 
 /// [`MessageIntegrity`] decoder.
-///
-/// [`MessageIntegrity`]: ./struct.MessageIntegrity.html
 #[derive(Debug, Default)]
 pub struct MessageIntegrityDecoder(CopyableBytesDecoder<[u8; 20]>);
 impl MessageIntegrityDecoder {
@@ -502,8 +484,6 @@ impl_decode!(MessageIntegrityDecoder, MessageIntegrity, |hmac_sha1| Ok(
 ));
 
 /// [`MessageIntegrity`] encoder.
-///
-/// [`MessageIntegrity`]: ./struct.MessageIntegrity.html
 #[derive(Debug, Default)]
 pub struct MessageIntegrityEncoder(BytesEncoder<[u8; 20]>);
 impl MessageIntegrityEncoder {
@@ -562,8 +542,6 @@ impl Attribute for Nonce {
 }
 
 /// [`Nonce`] decoder.
-///
-/// [`Nonce`]: ./struct.Nonce.html
 #[derive(Debug, Default)]
 pub struct NonceDecoder(Utf8Decoder);
 impl NonceDecoder {
@@ -575,8 +553,6 @@ impl NonceDecoder {
 impl_decode!(NonceDecoder, Nonce, Nonce::new);
 
 /// [`Nonce`] encoder.
-///
-/// [`Nonce`]: ./struct.Nonce.html
 #[derive(Debug, Default)]
 pub struct NonceEncoder(Utf8Encoder);
 impl NonceEncoder {
@@ -631,8 +607,6 @@ impl Attribute for Realm {
 }
 
 /// [`Realm`] decoder.
-///
-/// [`Realm`]: ./struct.Realm.html
 #[derive(Debug, Default)]
 pub struct RealmDecoder(Utf8Decoder);
 impl RealmDecoder {
@@ -644,8 +618,6 @@ impl RealmDecoder {
 impl_decode!(RealmDecoder, Realm, Realm::new);
 
 /// [`Realm`] encoder.
-///
-/// [`Realm`]: ./struct.Realm.html
 #[derive(Debug, Default)]
 pub struct RealmEncoder(Utf8Encoder);
 impl RealmEncoder {
@@ -695,8 +667,6 @@ impl Attribute for Software {
 }
 
 /// [`Software`] decoder.
-///
-/// [`Software`]: ./struct.Software.html
 #[derive(Debug, Default)]
 pub struct SoftwareDecoder(Utf8Decoder);
 impl SoftwareDecoder {
@@ -708,8 +678,6 @@ impl SoftwareDecoder {
 impl_decode!(SoftwareDecoder, Software, Software::new);
 
 /// [`Software`] encoder.
-///
-/// [`Software`]: ./struct.Software.html
 #[derive(Debug, Default)]
 pub struct SoftwareEncoder(Utf8Encoder);
 impl SoftwareEncoder {
@@ -754,8 +722,6 @@ impl Attribute for UnknownAttributes {
 }
 
 /// [`UnknownAttributes`] decoder.
-///
-/// [`UnknownAttributes`]: ./struct.UnknownAttributes.html
 #[derive(Debug, Default)]
 pub struct UnknownAttributesDecoder(Collect<U16beDecoder, Vec<u16>>);
 impl UnknownAttributesDecoder {
@@ -773,8 +739,6 @@ impl_decode!(UnknownAttributesDecoder, UnknownAttributes, |vs: Vec<
 ));
 
 /// [`UnknownAttributes`] encoder.
-///
-/// [`UnknownAttributes`]: ./struct.UnknownAttributes.html
 #[derive(Debug, Default)]
 pub struct UnknownAttributesEncoder(PreEncode<Repeat<U16beEncoder, vec::IntoIter<u16>>>);
 impl UnknownAttributesEncoder {
@@ -837,8 +801,6 @@ impl Attribute for Username {
 }
 
 /// [`Username`] decoder.
-///
-/// [`Username`]: ./struct.Username.html
 #[derive(Debug, Default)]
 pub struct UsernameDecoder(Utf8Decoder);
 impl UsernameDecoder {
@@ -850,8 +812,6 @@ impl UsernameDecoder {
 impl_decode!(UsernameDecoder, Username, Username::new);
 
 /// [`Username`] encoder.
-///
-/// [`Username`]: ./struct.Username.html
 #[derive(Debug, Default)]
 pub struct UsernameEncoder(Utf8Encoder);
 impl UsernameEncoder {
@@ -903,8 +863,6 @@ impl Attribute for XorMappedAddress {
 }
 
 /// [`XorMappedAddress`] decoder.
-///
-/// [`XorMappedAddress`]: ./struct.XorMappedAddress.html
 #[derive(Debug, Default)]
 pub struct XorMappedAddressDecoder(SocketAddrDecoder);
 impl XorMappedAddressDecoder {
@@ -918,8 +876,6 @@ impl_decode!(XorMappedAddressDecoder, XorMappedAddress, |item| Ok(
 ));
 
 /// [`XorMappedAddress`] encoder.
-///
-/// [`XorMappedAddress`]: ./struct.XorMappedAddress.html
 #[derive(Debug, Default)]
 pub struct XorMappedAddressEncoder(SocketAddrEncoder);
 impl XorMappedAddressEncoder {
@@ -973,8 +929,6 @@ impl Attribute for XorMappedAddress2 {
 }
 
 /// [`XorMappedAddress2`] decoder.
-///
-/// [`XorMappedAddress2`]: ./struct.XorMappedAddress.html
 #[derive(Debug, Default)]
 pub struct XorMappedAddress2Decoder(SocketAddrDecoder);
 impl XorMappedAddress2Decoder {
@@ -988,8 +942,6 @@ impl_decode!(XorMappedAddress2Decoder, XorMappedAddress2, |item| Ok(
 ));
 
 /// [`XorMappedAddress`] encoder.
-///
-/// [`XorMappedAddress`]: ./struct.XorMappedAddress.html
 #[derive(Debug, Default)]
 pub struct XorMappedAddress2Encoder(SocketAddrEncoder);
 impl XorMappedAddress2Encoder {

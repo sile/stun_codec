@@ -4,15 +4,12 @@
 
 use std::net::SocketAddr;
 
-use bytecodec::{
-    ByteCount, Decode, Encode, Eos, Result, SizedEncode,
-    TryTaggedDecode,
-};
 use bytecodec::fixnum::{U16beDecoder, U16beEncoder, U32beDecoder, U32beEncoder};
+use bytecodec::{ByteCount, Decode, Encode, Eos, Result, SizedEncode, TryTaggedDecode};
 
 use crate::attribute::{Attribute, AttributeType};
-use crate::Message;
 use crate::net::{socket_addr_xor, SocketAddrDecoder, SocketAddrEncoder};
+use crate::Message;
 
 macro_rules! impl_decode {
     ($decoder:ty, $item:ident, $and_then:expr) => {
@@ -114,8 +111,6 @@ impl Attribute for ChangeRequest {
 }
 
 /// [`ChangeRequest`] decoder.
-///
-/// [`ChangeRequest`]: ./struct.ChangeRequest.html
 #[derive(Debug, Default)]
 pub struct ChangeRequestDecoder(U32beDecoder);
 
@@ -125,11 +120,11 @@ impl ChangeRequestDecoder {
         Self::default()
     }
 }
-impl_decode!(ChangeRequestDecoder, ChangeRequest, |item| {Ok(ChangeRequest((item & 0x2) != 0, (item & 0x1) != 0))});
+impl_decode!(ChangeRequestDecoder, ChangeRequest, |item| {
+    Ok(ChangeRequest((item & 0x2) != 0, (item & 0x1) != 0))
+});
 
 /// [`ChangeRequest`] encoder.
-///
-/// [`ChangeRequest`]: ./struct.ChangeRequest.html
 #[derive(Debug, Default)]
 pub struct ChangeRequestEncoder(U32beEncoder);
 
@@ -178,8 +173,6 @@ impl Attribute for ResponseOrigin {
 }
 
 /// [`ResponseOrigin`] decoder.
-///
-/// [`ResponseOrigin`]: ./struct.ResponseOrigin.html
 #[derive(Debug, Default)]
 pub struct ResponseOriginDecoder(SocketAddrDecoder);
 
@@ -189,7 +182,9 @@ impl ResponseOriginDecoder {
         Self::default()
     }
 }
-impl_decode!(ResponseOriginDecoder, ResponseOrigin, |item| Ok(ResponseOrigin(item)));
+impl_decode!(ResponseOriginDecoder, ResponseOrigin, |item| Ok(
+    ResponseOrigin(item)
+));
 
 /// [`ResponseOrigin`] encoder.
 ///
@@ -203,7 +198,9 @@ impl ResponseOriginEncoder {
         Self::default()
     }
 }
-impl_encode!(ResponseOriginEncoder, ResponseOrigin, |item: Self::Item| item.0);
+impl_encode!(ResponseOriginEncoder, ResponseOrigin, |item: Self::Item| {
+    item.0
+});
 
 /// `OTHER-ADDRESS` attribute.
 ///
@@ -238,8 +235,6 @@ impl Attribute for OtherAddress {
 }
 
 /// [`OtherAddress`] decoder.
-///
-/// [`OtherAddress`]: ./struct.OtherAddress.html
 #[derive(Debug, Default)]
 pub struct OtherAddressDecoder(SocketAddrDecoder);
 
@@ -249,11 +244,11 @@ impl OtherAddressDecoder {
         Self::default()
     }
 }
-impl_decode!(OtherAddressDecoder, OtherAddress, |item| Ok(OtherAddress(item)));
+impl_decode!(OtherAddressDecoder, OtherAddress, |item| Ok(OtherAddress(
+    item
+)));
 
 /// [`OtherAddress`] encoder.
-///
-/// [`OtherAddress`]: ./struct.OtherAddress.html
 #[derive(Debug, Default)]
 pub struct OtherAddressEncoder(SocketAddrEncoder);
 
@@ -298,8 +293,6 @@ impl Attribute for ResponsePort {
 }
 
 /// [`ResponsePort`] decoder.
-///
-/// [`ResponsePort`]: ./struct.ResponsePort.html
 #[derive(Debug, Default)]
 pub struct ResponsePortDecoder(U32beDecoder);
 
@@ -309,11 +302,11 @@ impl ResponsePortDecoder {
         Self::default()
     }
 }
-impl_decode!(ResponsePortDecoder, ResponsePort, |item| Ok(ResponsePort::new((item >> 16) as u16)));
+impl_decode!(ResponsePortDecoder, ResponsePort, |item| Ok(
+    ResponsePort::new((item >> 16) as u16)
+));
 
 /// [`ResponsePort`] encoder.
-///
-/// [`ResponsePort`]: ./struct.ResponsePort.html
 #[derive(Debug, Default)]
 pub struct ResponsePortEncoder(U32beEncoder);
 

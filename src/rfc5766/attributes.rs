@@ -138,8 +138,6 @@ impl Attribute for ChannelNumber {
 }
 
 /// [`ChannelNumber`] decoder.
-///
-/// [`ChannelNumber`]: ./struct.ChannelNumber.html
 #[derive(Debug, Default)]
 pub struct ChannelNumberDecoder(U32beDecoder);
 impl ChannelNumberDecoder {
@@ -153,8 +151,6 @@ impl_decode!(ChannelNumberDecoder, ChannelNumber, |item| track!(
 ));
 
 /// [`ChannelNumber`] encoder.
-///
-/// [`ChannelNumber`]: ./struct.ChannelNumber.html
 #[derive(Debug, Default)]
 pub struct ChannelNumberEncoder(U32beEncoder);
 impl ChannelNumberEncoder {
@@ -214,8 +210,6 @@ impl Attribute for Lifetime {
 }
 
 /// [`Lifetime`] decoder.
-///
-/// [`Lifetime`]: ./struct.Lifetime.html
 #[derive(Debug, Default)]
 pub struct LifetimeDecoder(U32beDecoder);
 impl LifetimeDecoder {
@@ -229,8 +223,6 @@ impl_decode!(LifetimeDecoder, Lifetime, |item| Ok(Lifetime(
 )));
 
 /// [`Lifetime`] encoder.
-///
-/// [`Lifetime`]: ./struct.Lifetime.html
 #[derive(Debug, Default)]
 pub struct LifetimeEncoder(U32beEncoder);
 impl LifetimeEncoder {
@@ -286,8 +278,6 @@ impl Attribute for XorPeerAddress {
 }
 
 /// [`XorPeerAddress`] decoder.
-///
-/// [`XorPeerAddress`]: ./struct.XorPeerAddress.html
 #[derive(Debug, Default)]
 pub struct XorPeerAddressDecoder(SocketAddrDecoder);
 impl XorPeerAddressDecoder {
@@ -301,8 +291,6 @@ impl_decode!(XorPeerAddressDecoder, XorPeerAddress, |item| Ok(
 ));
 
 /// [`XorPeerAddress`] encoder.
-///
-/// [`XorPeerAddress`]: ./struct.XorPeerAddress.html
 #[derive(Debug, Default)]
 pub struct XorPeerAddressEncoder(SocketAddrEncoder);
 impl XorPeerAddressEncoder {
@@ -352,8 +340,6 @@ impl Attribute for Data {
 }
 
 /// [`Data`] decoder.
-///
-/// [`Data`]: ./struct.Data.html
 #[derive(Debug, Default)]
 pub struct DataDecoder(RemainingBytesDecoder);
 impl DataDecoder {
@@ -365,8 +351,6 @@ impl DataDecoder {
 impl_decode!(DataDecoder, Data, |item| Ok(Data(item)));
 
 /// [`Data`] encoder.
-///
-/// [`Data`]: ./struct.Data.html
 #[derive(Debug, Default)]
 pub struct DataEncoder(BytesEncoder);
 impl DataEncoder {
@@ -418,8 +402,6 @@ impl Attribute for XorRelayAddress {
 }
 
 /// [`XorRelayAddress`] decoder.
-///
-/// [`XorRelayAddress`]: ./struct.XorRelayAddress.html
 #[derive(Debug, Default)]
 pub struct XorRelayAddressDecoder(SocketAddrDecoder);
 impl XorRelayAddressDecoder {
@@ -433,8 +415,6 @@ impl_decode!(XorRelayAddressDecoder, XorRelayAddress, |item| Ok(
 ));
 
 /// [`XorRelayAddress`] encoder.
-///
-/// [`XorRelayAddress`]: ./struct.XorRelayAddress.html
 #[derive(Debug, Default)]
 pub struct XorRelayAddressEncoder(SocketAddrEncoder);
 impl XorRelayAddressEncoder {
@@ -480,8 +460,6 @@ impl Attribute for EvenPort {
 }
 
 /// [`EvenPort`] decoder.
-///
-/// [`EvenPort`]: ./struct.EvenPort.html
 #[derive(Debug, Default)]
 pub struct EvenPortDecoder(U8Decoder);
 impl EvenPortDecoder {
@@ -495,8 +473,6 @@ impl_decode!(EvenPortDecoder, EvenPort, |item| Ok(EvenPort(
 )));
 
 /// [`EvenPort`] encoder.
-///
-/// [`EvenPort`]: ./struct.EvenPort.html
 #[derive(Debug, Default)]
 pub struct EvenPortEncoder(U8Encoder);
 impl EvenPortEncoder {
@@ -540,8 +516,6 @@ impl Attribute for RequestedTransport {
 }
 
 /// [`RequestedTransport`] decoder.
-///
-/// [`RequestedTransport`]: ./struct.RequestedTransport.html
 #[derive(Debug, Default)]
 pub struct RequestedTransportDecoder(U32beDecoder);
 impl RequestedTransportDecoder {
@@ -555,8 +529,6 @@ impl_decode!(RequestedTransportDecoder, RequestedTransport, |item| Ok(
 ));
 
 /// [`RequestedTransport`] encoder.
-///
-/// [`RequestedTransport`]: ./struct.RequestedTransport.html
 #[derive(Debug, Default)]
 pub struct RequestedTransportEncoder(U32beEncoder);
 impl RequestedTransportEncoder {
@@ -592,8 +564,6 @@ impl Attribute for DontFragment {
 }
 
 /// [`DontFragment`] decoder.
-///
-/// [`DontFragment`]: ./struct.DontFragment.html
 #[derive(Debug, Default)]
 pub struct DontFragmentDecoder(NullDecoder);
 impl DontFragmentDecoder {
@@ -605,8 +575,6 @@ impl DontFragmentDecoder {
 impl_decode!(DontFragmentDecoder, DontFragment, |()| Ok(DontFragment));
 
 /// [`DontFragment`] encoder.
-///
-/// [`DontFragment`]: ./struct.DontFragment.html
 #[derive(Debug, Default)]
 pub struct DontFragmentEncoder(NullEncoder);
 impl DontFragmentEncoder {
@@ -648,8 +616,6 @@ impl Attribute for ReservationToken {
 }
 
 /// [`ReservationToken`] decoder.
-///
-/// [`ReservationToken`]: ./struct.ReservationToken.html
 #[derive(Debug, Default)]
 pub struct ReservationTokenDecoder(U64beDecoder);
 impl ReservationTokenDecoder {
@@ -663,8 +629,6 @@ impl_decode!(ReservationTokenDecoder, ReservationToken, |item| Ok(
 ));
 
 /// [`ReservationToken`] encoder.
-///
-/// [`ReservationToken`]: ./struct.ReservationToken.html
 #[derive(Debug, Default)]
 pub struct ReservationTokenEncoder(U64beEncoder);
 impl ReservationTokenEncoder {

@@ -97,8 +97,6 @@ impl Attribute for Priority {
 }
 
 /// [`Priority`] decoder.
-///
-/// [`Priority`]: ./struct.Priority.html
 #[derive(Debug, Default)]
 pub struct PriorityDecoder(U32beDecoder);
 
@@ -111,8 +109,6 @@ impl PriorityDecoder {
 impl_decode!(PriorityDecoder, Priority, |prio| Ok(Priority(prio)));
 
 /// [`Priority`] encoder.
-///
-/// [`Priority`]: ./struct.Priority.html
 #[derive(Debug, Default)]
 pub struct PriorityEncoder(U32beEncoder);
 
@@ -155,8 +151,6 @@ impl Default for UseCandidate {
 }
 
 /// [`UseCandidate`] decoder.
-///
-/// [`UseCandidate`]: ./struct.UseCandidate.html
 #[derive(Debug, Default)]
 pub struct UseCandidateDecoder(NullDecoder);
 
@@ -169,8 +163,6 @@ impl UseCandidateDecoder {
 impl_decode!(UseCandidateDecoder, UseCandidate, |_| Ok(UseCandidate));
 
 /// [`UseCandidate`] encoder.
-///
-/// [`UseCandidate`]: ./struct.UseCandidate.html
 #[derive(Debug, Default)]
 pub struct UseCandidateEncoder(NullEncoder);
 
@@ -213,8 +205,6 @@ impl Attribute for IceControlled {
 }
 
 /// [`IceControlled`] decoder.
-///
-/// [`IceControlled`]: ./struct.IceControlled.html
 #[derive(Debug, Default)]
 pub struct IceControlledDecoder(U64beDecoder);
 
@@ -229,8 +219,6 @@ impl_decode!(IceControlledDecoder, IceControlled, |prio| Ok(
 ));
 
 /// [`IceControlled`] encoder.
-///
-/// [`IceControlled`]: ./struct.IceControlled.html
 #[derive(Debug, Default)]
 pub struct IceControlledEncoder(U64beEncoder);
 
@@ -274,8 +262,6 @@ impl Attribute for IceControlling {
 }
 
 /// [`IceControlling`] decoder.
-///
-/// [`IceControlling`]: ./struct.IceControlling.html
 #[derive(Debug, Default)]
 pub struct IceControllingDecoder(U64beDecoder);
 
@@ -290,8 +276,6 @@ impl_decode!(IceControllingDecoder, IceControlling, |prio| Ok(
 ));
 
 /// [`IceControlling`] encoder.
-///
-/// [`IceControlling`]: ./struct.IceControlling.html
 #[derive(Debug, Default)]
 pub struct IceControllingEncoder(U64beEncoder);
 
