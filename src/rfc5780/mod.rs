@@ -9,10 +9,5 @@ define_attribute_enums!(
     Attribute,
     AttributeDecoder,
     AttributeEncoder,
-    [
-        ChangeRequest,
-        ResponseOrigin,
-        ResponsePort,
-        OtherAddress
-    ]
+    [ChangeRequest, ResponseOrigin, ResponsePort, OtherAddress]
 );
