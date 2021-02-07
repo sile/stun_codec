@@ -1,6 +1,6 @@
 [package]
 name = "stun_codec"
-version = "0.1.12"
+version = "0.1.13"
 authors = ["Takeru Ohta <phjgt308@gmail.com>"]
 description = "Encoders and decoders for STUN (RFC 5389) and its extensions"
 homepage = "https://github.com/sile/stun_codec"
