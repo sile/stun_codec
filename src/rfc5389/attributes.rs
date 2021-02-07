@@ -16,8 +16,6 @@ use bytecodec::{
 use byteorder::{BigEndian, ByteOrder};
 use crc::crc32;
 use hmacsha1::hmac_sha1;
-use md5;
-use std;
 use std::net::SocketAddr;
 use std::vec;
 
@@ -160,7 +158,7 @@ impl ErrorCode {
     /// Note that the value of `code` must be in range of `300..600`.
     /// If the value is out-of-range this will return an `ErrorKind::InvalidInput` error.
     pub fn new(code: u16, reason_phrase: String) -> Result<Self> {
-        track_assert!(300 <= code && code < 600, ErrorKind::InvalidInput; code, reason_phrase);
+        track_assert!((300..600).contains(&code), ErrorKind::InvalidInput; code, reason_phrase);
         Ok(ErrorCode {
             code,
             reason_phrase,
@@ -209,7 +207,7 @@ impl_decode!(ErrorCodeDecoder, ErrorCode, |(value, reason_phrase): (
 )| {
     let class = (value >> 8) & 0b111;
     let number = value & 0b1111_1111;
-    track_assert!(3 <= class && class < 6, ErrorKind::InvalidInput);
+    track_assert!((3..6).contains(&class), ErrorKind::InvalidInput);
     track_assert!(number < 100, ErrorKind::InvalidInput);
 
     let code = (class * 100 + number) as u16;

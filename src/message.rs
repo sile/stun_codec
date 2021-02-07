@@ -8,7 +8,6 @@ use bytecodec::bytes::{BytesEncoder, CopyableBytesDecoder};
 use bytecodec::combinator::{Collect, Length, Peekable, PreEncode, Repeat};
 use bytecodec::fixnum::{U16beDecoder, U16beEncoder, U32beDecoder, U32beEncoder};
 use bytecodec::{ByteCount, Decode, Encode, Eos, Error, ErrorKind, Result, SizedEncode};
-use std;
 use std::vec;
 use trackable::error::ErrorKindExt;
 
@@ -197,7 +196,7 @@ impl<A: Attribute> Message<A> {
         T: Attribute,
         A: TryAsRef<T>,
     {
-        self.attributes().filter_map(|a| a.try_as_ref()).nth(0)
+        self.attributes().filter_map(|a| a.try_as_ref()).next()
     }
 
     /// Returns an iterator that iterates over the known attributes in the message.
@@ -592,7 +591,6 @@ mod tests {
     use super::*;
     use crate::rfc5389::attributes::MappedAddress;
     use crate::rfc5389::methods::BINDING;
-    use crate::rfc5389::Attribute;
     use crate::{MessageClass, TransactionId};
     use bytecodec::DecodeExt;
     use trackable::result::TestResult;

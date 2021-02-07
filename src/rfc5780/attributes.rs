@@ -4,12 +4,11 @@
 
 use std::net::SocketAddr;
 
-use bytecodec::fixnum::{U16beDecoder, U16beEncoder, U32beDecoder, U32beEncoder};
+use bytecodec::fixnum::{U32beDecoder, U32beEncoder};
 use bytecodec::{ByteCount, Decode, Encode, Eos, Result, SizedEncode, TryTaggedDecode};
 
 use crate::attribute::{Attribute, AttributeType};
-use crate::net::{socket_addr_xor, SocketAddrDecoder, SocketAddrEncoder};
-use crate::Message;
+use crate::net::{SocketAddrDecoder, SocketAddrEncoder};
 
 macro_rules! impl_decode {
     ($decoder:ty, $item:ident, $and_then:expr) => {
@@ -316,4 +315,4 @@ impl ResponsePortEncoder {
         Self::default()
     }
 }
-impl_encode!(ResponsePortEncoder, ResponsePort, |item: Self::Item| 0u16);
+impl_encode!(ResponsePortEncoder, ResponsePort, |_item: Self::Item| 0u16);
