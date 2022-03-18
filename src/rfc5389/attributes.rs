@@ -14,7 +14,6 @@ use bytecodec::{
     TryTaggedDecode,
 };
 use byteorder::{BigEndian, ByteOrder};
-use crc::crc32;
 use hmacsha1::hmac_sha1;
 use std::net::SocketAddr;
 use std::vec;
@@ -251,7 +250,7 @@ impl Fingerprint {
         let mut bytes = track!(MessageEncoder::default().encode_into_bytes(message.clone()))?;
         let final_len = bytes.len() as u16 - 20 + 8; // Adds `Fingerprint` attribute length
         BigEndian::write_u16(&mut bytes[2..4], final_len);
-        let crc32 = crc32::checksum_ieee(&bytes[..]) ^ 0x5354_554e;
+        let crc32 = crc::Crc::<u32>::new(&crc::CRC_32_ISO_HDLC).checksum(&bytes[..]) ^ 0x5354_554e;
         Ok(Fingerprint { crc32 })
     }
 
