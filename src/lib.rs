@@ -103,6 +103,7 @@ pub mod rfc5245;
 pub mod rfc5389;
 pub mod rfc5766;
 pub mod rfc5780;
+pub mod rfc8016;
 
 mod attribute;
 mod constants;
