@@ -51,8 +51,10 @@ References
 - [RFC 5389 - Session Traversal Utilities for NAT (STUN)][RFC 5389]
 - [RFC 5769 - Test Vectors for Session Traversal Utilities for NAT (STUN)][RFC 5769]
 - [RFC 5780 - NAT Behavior Discovery Using Session Traversal Utilities for NAT][RFC 5780]
+- [RFC 8016 - Mobility with Traversal Using Relays around NAT (TURN)][RFC 8016]
 
 [RFC 5245]: https://tools.ietf.org/html/rfc5245
 [RFC 5389]: https://tools.ietf.org/html/rfc5389
 [RFC 5769]: https://tools.ietf.org/html/rfc5769
 [RFC 5780]: https://tools.ietf.org/html/rfc5780
+[RFC 8016]: https://tools.ietf.org/html/rfc8016
