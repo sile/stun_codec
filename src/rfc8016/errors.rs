@@ -16,6 +16,10 @@ impl MobilityForbidden {
 }
 impl From<MobilityForbidden> for ErrorCode {
     fn from(_: MobilityForbidden) -> Self {
-        ErrorCode::new(MobilityForbidden::CODEPOINT, "Mobility Forbidden".to_owned()).expect("never fails")
+        ErrorCode::new(
+            MobilityForbidden::CODEPOINT,
+            "Mobility Forbidden".to_owned(),
+        )
+        .expect("never fails")
     }
 }

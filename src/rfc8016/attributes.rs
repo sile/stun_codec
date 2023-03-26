@@ -2,7 +2,7 @@
 //!
 //! [RFC 8016]: https://tools.ietf.org/html/rfc8016
 
-use bytecodec::bytes::{RemainingBytesDecoder, BytesEncoder};
+use bytecodec::bytes::{BytesEncoder, RemainingBytesDecoder};
 use bytecodec::{ByteCount, Decode, Encode, Eos, Result, SizedEncode, TryTaggedDecode};
 
 use crate::attribute::{Attribute, AttributeType};
@@ -79,7 +79,7 @@ impl MobilityTicket {
     pub const CODEPOINT: u16 = 0x8030;
 
     /// Makes a new, filled `MobilityTicket` instance.
-    /// 
+    ///
     /// Fails on exceeding length.
     pub fn new(data: Vec<u8>) -> Result<Self> {
         //track_assert!(data.len() <= 0xFFFF, ErrorKind::InvalidInput);
@@ -114,7 +114,9 @@ impl MobilityTicketDecoder {
         Self::default()
     }
 }
-impl_decode!(MobilityTicketDecoder, MobilityTicket, |item| Ok(MobilityTicket(item)));
+impl_decode!(MobilityTicketDecoder, MobilityTicket, |item| Ok(
+    MobilityTicket(item)
+));
 
 /// [`Data`] encoder.
 #[derive(Debug, Default)]
@@ -125,6 +127,6 @@ impl MobilityTicketEncoder {
         Self::default()
     }
 }
-impl_encode!(MobilityTicketEncoder, MobilityTicket, |item: Self::Item| item.0);
-
-
+impl_encode!(MobilityTicketEncoder, MobilityTicket, |item: Self::Item| {
+    item.0
+});
