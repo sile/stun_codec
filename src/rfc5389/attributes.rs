@@ -15,6 +15,7 @@ use bytecodec::{
 };
 use byteorder::{BigEndian, ByteOrder};
 use hmacsha1::hmac_sha1;
+use std::borrow::Cow;
 use std::net::SocketAddr;
 use std::vec;
 
@@ -632,7 +633,7 @@ impl_encode!(RealmEncoder, Realm, |item: Self::Item| item.text);
 /// [RFC 5389 -- 15.10. SOFTWARE]: https://tools.ietf.org/html/rfc5389#section-15.10
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Software {
-    description: String,
+    description: Cow<'static, str>,
 }
 impl Software {
     /// The codepoint of the type of the attribute.
@@ -646,7 +647,26 @@ impl Software {
     /// If it is too long, this will return an `ErrorKind::InvalidInput` error.
     pub fn new(description: String) -> Result<Self> {
         track_assert!(description.chars().count() < 128, ErrorKind::InvalidInput; description);
-        Ok(Software { description })
+        Ok(Software {
+            description: description.into(),
+        })
+    }
+
+    /// Makes a new `Software` instance from a static string.
+    ///
+    /// This function is const, so you can create this in a const context.
+    ///
+    /// # Panics
+    ///
+    /// The length of `description` must be less than `128` characters.
+    /// Panics if the string is longer.
+    pub const fn new_static(description: &'static str) -> Self {
+        if description.len() >= 128 {
+            panic!("Description for `Software` cannot be longer than 128 characters.");
+        }
+        Self {
+            description: Cow::Borrowed(description),
+        }
     }
 
     /// Returns the description of this instance.
@@ -676,7 +696,7 @@ impl_decode!(SoftwareDecoder, Software, Software::new);
 
 /// [`Software`] encoder.
 #[derive(Debug, Default)]
-pub struct SoftwareEncoder(Utf8Encoder);
+pub struct SoftwareEncoder(Utf8Encoder<Cow<'static, str>>);
 impl SoftwareEncoder {
     /// Makes a new `SoftwareEncoder` instance.
     pub fn new() -> Self {
