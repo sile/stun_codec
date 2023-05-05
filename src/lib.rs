@@ -279,11 +279,11 @@ mod tests {
         assert_eq!(encoder.encode_into_bytes(message.clone())?, &input[..]);
 
         // TEST: `MessageIntegrity`
-        let uesrname = get_attr!(message, Username);
+        let username = get_attr!(message, Username);
         let realm = get_attr!(message, Realm);
         let password = "TheMatrIX"; // TODO: Test before SASLprep version
         get_attr!(message, MessageIntegrity)
-            .check_long_term_credential(&uesrname, &realm, password)
+            .check_long_term_credential(username, realm, password)
             .unwrap();
 
         Ok(())
