@@ -94,6 +94,7 @@ pub use message::{
 pub use method::Method;
 pub use transaction_id::TransactionId;
 
+/// Macros.
 #[macro_use]
 pub mod macros;
 
