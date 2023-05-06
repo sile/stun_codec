@@ -1,3 +1,5 @@
+pub use trackable::{track, track_assert, track_panic};
+
 /// Defines an aggregated attribute type and its decoder and encoder.
 #[macro_export]
 macro_rules! define_attribute_enums {
@@ -37,7 +39,7 @@ macro_rules! define_attribute_enums {
                 A: $crate::Attribute,
             {
                 match self {
-                    $($attr::$variant(a) => track!(a.before_encode(message), "attr={}", stringify!($variant))),*
+                    $($attr::$variant(a) => $crate::macros::track!(a.before_encode(message), "attr={}", stringify!($variant))),*
                 }
             }
 
@@ -46,7 +48,7 @@ macro_rules! define_attribute_enums {
                 A: $crate::Attribute,
             {
                 match self {
-                    $($attr::$variant(a) => track!(a.after_decode(message), "attr={}", stringify!($variant))),*
+                    $($attr::$variant(a) => $crate::macros::track!(a.after_decode(message), "attr={}", stringify!($variant))),*
                 }
             }
         }
@@ -74,15 +76,15 @@ macro_rules! define_attribute_enums {
 
             fn decode(&mut self, buf: &[u8], eos: ::bytecodec::Eos) -> ::bytecodec::Result<usize> {
                 match self {
-                    $($decoder::$variant(a) => track!(a.decode(buf, eos), "attr={}", stringify!($variant))),*,
-                    $decoder::None => track_panic!(::bytecodec::ErrorKind::InconsistentState),
+                    $($decoder::$variant(a) => $crate::macros::track!(a.decode(buf, eos), "attr={}", stringify!($variant))),*,
+                    $decoder::None => $crate::macros::track_panic!(::bytecodec::ErrorKind::InconsistentState),
                 }
             }
 
             fn finish_decoding(&mut self) -> ::bytecodec::Result<Self::Item> {
                 let item = match self {
-                    $($decoder::$variant(a) => track!(a.finish_decoding(), "attr={}", stringify!($variant))?.into()),*,
-                    $decoder::None => track_panic!(::bytecodec::ErrorKind::IncompleteDecoding),
+                    $($decoder::$variant(a) => $crate::macros::track!(a.finish_decoding(), "attr={}", stringify!($variant))?.into()),*,
+                    $decoder::None => $crate::macros::track_panic!(::bytecodec::ErrorKind::IncompleteDecoding),
                 };
                 *self = $decoder::None;
                 Ok(item)
@@ -137,17 +139,17 @@ macro_rules! define_attribute_enums {
 
             fn encode(&mut self, buf: &mut [u8], eos: ::bytecodec::Eos) -> ::bytecodec::Result<usize> {
                 match self {
-                    $($encoder::$variant(a) => track!(a.encode(buf, eos), "attr={}", stringify!($variant))),*,
+                    $($encoder::$variant(a) => $crate::macros::track!(a.encode(buf, eos), "attr={}", stringify!($variant))),*,
                     $encoder::None => Ok(0),
                 }
             }
 
             fn start_encoding(&mut self, item: Self::Item) -> ::bytecodec::Result<()> {
-                track_assert!(self.is_idle(), ::bytecodec::ErrorKind::EncoderFull; item);
+                $crate::macros::track_assert!(self.is_idle(), ::bytecodec::ErrorKind::EncoderFull; item);
                 *self = match item {
                     $($attr::$variant(a) => {
                         let mut encoder = <$variant as $crate::Attribute>::Encoder::default();
-                        track!(encoder.start_encoding(a), "attr={}", stringify!($variant))?;
+                        $crate::macros::track!(encoder.start_encoding(a), "attr={}", stringify!($variant))?;
                         $encoder::$variant(encoder)
                     }),*
                 };

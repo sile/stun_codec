@@ -95,7 +95,7 @@ pub use method::Method;
 pub use transaction_id::TransactionId;
 
 #[macro_use]
-mod macros;
+pub mod macros;
 
 pub mod convert;
 pub mod net;
