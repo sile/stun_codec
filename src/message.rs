@@ -403,9 +403,7 @@ impl<A: Attribute> MessageDecoder<A> {
                 message.attributes.set_len(i);
                 let decode_result = track!(attr.after_decode(&message));
                 message.attributes.set_len(attributes_len);
-                if let Err(e) = decode_result {
-                    return Err(e);
-                }
+                decode_result?;
             }
         }
         Ok(message)
@@ -506,9 +504,7 @@ impl<A: Attribute> Encode for MessageEncoder<A> {
                 item.attributes.set_len(i);
                 let encode_result = track!(attr.before_encode(&item));
                 item.attributes.set_len(attributes_len);
-                if let Err(e) = encode_result {
-                    return Err(e);
-                }
+                encode_result?;
             }
         }
 
