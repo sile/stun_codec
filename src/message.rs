@@ -398,17 +398,15 @@ impl<A: Attribute> MessageDecoder<A> {
         let attributes_len = message.attributes.len();
         for i in 0..attributes_len {
             unsafe {
-                message.attributes.set_len(i);
                 let message_mut = &mut *(&mut message as *mut Message<A>);
                 let attr = message_mut.attributes.get_unchecked_mut(i);
-                if let Err(e) = track!(attr.after_decode(&message)) {
-                    message.attributes.set_len(attributes_len);
+                message.attributes.set_len(i);
+                let decode_result = track!(attr.after_decode(&message));
+                message.attributes.set_len(attributes_len);
+                if let Err(e) = decode_result {
                     return Err(e);
                 }
             }
-        }
-        unsafe {
-            message.attributes.set_len(attributes_len);
         }
         Ok(message)
     }
@@ -503,17 +501,15 @@ impl<A: Attribute> Encode for MessageEncoder<A> {
         let attributes_len = item.attributes.len();
         for i in 0..attributes_len {
             unsafe {
-                item.attributes.set_len(i);
                 let item_mut = &mut *(&mut item as *mut Message<A>);
                 let attr = item_mut.attributes.get_unchecked_mut(i);
-                if let Err(e) = track!(attr.before_encode(&item)) {
-                    item.attributes.set_len(attributes_len);
+                item.attributes.set_len(i);
+                let encode_result = track!(attr.before_encode(&item));
+                item.attributes.set_len(attributes_len);
+                if let Err(e) = encode_result {
                     return Err(e);
                 }
             }
-        }
-        unsafe {
-            item.attributes.set_len(attributes_len);
         }
 
         let message_type = Type {
