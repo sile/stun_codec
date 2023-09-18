@@ -50,6 +50,7 @@ macro_rules! impl_encode {
                 track!(self.0.encode(buf, eos))
             }
 
+            #[allow(clippy::redundant_closure_call)]
             fn start_encoding(&mut self, item: Self::Item) -> Result<()> {
                 track!(self.0.start_encoding($map_from(item).into()))
             }
