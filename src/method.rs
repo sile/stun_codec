@@ -1,4 +1,6 @@
+use crate::{rfc5389, rfc5766};
 use bytecodec::{ErrorKind, Result};
+use std::fmt;
 
 /// STUN method.
 ///
@@ -30,5 +32,20 @@ impl Method {
 impl From<u8> for Method {
     fn from(f: u8) -> Self {
         Method(u16::from(f))
+    }
+}
+
+impl fmt::Display for Method {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            rfc5389::methods::BINDING => write!(f, "binding"),
+            rfc5766::methods::ALLOCATE => write!(f, "allocate"),
+            rfc5766::methods::REFRESH => write!(f, "refresh"),
+            rfc5766::methods::CHANNEL_BIND => write!(f, "channel bind"),
+            rfc5766::methods::CREATE_PERMISSION => write!(f, "create permission"),
+            rfc5766::methods::DATA => write!(f, "data"),
+            rfc5766::methods::SEND => write!(f, "send"),
+            Method(code) => write!(f, "unknown ({code})"),
+        }
     }
 }
