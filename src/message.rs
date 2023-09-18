@@ -8,7 +8,7 @@ use bytecodec::bytes::{BytesEncoder, CopyableBytesDecoder};
 use bytecodec::combinator::{Collect, Length, Peekable, PreEncode, Repeat};
 use bytecodec::fixnum::{U16beDecoder, U16beEncoder, U32beDecoder, U32beEncoder};
 use bytecodec::{ByteCount, Decode, Encode, Eos, Error, ErrorKind, Result, SizedEncode};
-use std::vec;
+use std::{fmt, vec};
 use trackable::error::ErrorKindExt;
 
 /// Message decoded by [`MessageDecoder`].
@@ -31,6 +31,17 @@ impl MessageClass {
             0b10 => Some(MessageClass::SuccessResponse),
             0b11 => Some(MessageClass::ErrorResponse),
             _ => None,
+        }
+    }
+}
+
+impl fmt::Display for MessageClass {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            MessageClass::Request => write!(f, "request"),
+            MessageClass::Indication => write!(f, "indication"),
+            MessageClass::SuccessResponse => write!(f, "success response"),
+            MessageClass::ErrorResponse => write!(f, "error response"),
         }
     }
 }
