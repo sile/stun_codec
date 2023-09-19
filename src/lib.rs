@@ -11,8 +11,8 @@
 //!
 //! # fn main() -> bytecodec::Result<()> {
 //! // Creates a message
-//! let mut message = Message::new(MessageClass::Request, BINDING, TransactionId::new([3; 12]));
-//! message.add_attribute(Attribute::Software(Software::new("foo".to_owned())?));
+//! let mut message = Message::<Attribute>::new(MessageClass::Request, BINDING, TransactionId::new([3; 12]));
+//! message.add_attribute(Software::new("foo".to_owned())?);
 //!
 //! // Encodes the message
 //! let mut encoder = MessageEncoder::new();
@@ -138,7 +138,7 @@ mod tests {
     #[test]
     fn it_works() -> Result<(), MainError> {
         let mut message = Message::new(MessageClass::Request, BINDING, TransactionId::new([3; 12]));
-        message.add_attribute(Attribute::Software(Software::new("foo".to_owned())?));
+        message.add_attribute(Software::new("foo".to_owned())?);
 
         let mut encoder = MessageEncoder::new();
         let bytes = encoder.encode_into_bytes(message.clone())?;

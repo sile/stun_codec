@@ -224,8 +224,9 @@ impl<A: Attribute> Message<A> {
     }
 
     /// Adds the given attribute to the tail of the attributes in the message.
-    pub fn add_attribute(&mut self, attribute: A) {
-        self.attributes.push(LosslessAttribute::new(attribute));
+    pub fn add_attribute(&mut self, attribute: impl Into<A>) {
+        self.attributes
+            .push(LosslessAttribute::new(attribute.into()));
     }
 }
 
