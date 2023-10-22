@@ -14,7 +14,8 @@ use bytecodec::{
     TryTaggedDecode,
 };
 use byteorder::{BigEndian, ByteOrder};
-use hmacsha1::hmac_sha1;
+use hmac::{Hmac, Mac};
+use sha1::Sha1;
 use std::borrow::Cow;
 use std::net::SocketAddr;
 use std::vec;
@@ -375,6 +376,19 @@ impl MessageIntegrity {
     /// The codepoint of the type of the attribute.
     pub const CODEPOINT: u16 = 0x0008;
 
+    /// utility function for creating HMAC-SHA1 signatures
+    fn generate_hmac_token(key: &[u8], message: &[u8]) -> [u8; 20] {
+        // Create the hasher with the key. We can use expect for Hmac algorithms as they allow arbitrary key sizes.
+        let mut hasher: Hmac<Sha1> = Mac::new_from_slice(key)
+             .expect("HMAC algoritms can take keys of any size");
+    
+        // hash the message
+        hasher.update(message);
+    
+        // finalize the hash and convert to a static array
+        hasher.finalize().into_bytes().into()
+    }
+
     /// Makes a new `MessageIntegrity` instance for short-term credentials.
     pub fn new_short_term_credential<A>(message: &Message<A>, password: &str) -> Result<Self>
     where
@@ -382,7 +396,7 @@ impl MessageIntegrity {
     {
         let key = password.as_bytes();
         let preceding_message_bytes = track!(Self::message_into_bytes(message.clone()))?;
-        let hmac_sha1 = hmac_sha1(key, &preceding_message_bytes);
+        let hmac_sha1 = Self::generate_hmac_token(key, &preceding_message_bytes);
         Ok(MessageIntegrity {
             hmac_sha1,
             preceding_message_bytes,
@@ -402,7 +416,7 @@ impl MessageIntegrity {
         let key =
             md5::compute(format!("{}:{}:{}", username.name(), realm.text(), password).as_bytes());
         let preceding_message_bytes = track!(Self::message_into_bytes(message.clone()))?;
-        let hmac_sha1 = hmac_sha1(&key.0[..], &preceding_message_bytes);
+        let hmac_sha1 = Self::generate_hmac_token(&key.0[..], &preceding_message_bytes);
         Ok(MessageIntegrity {
             hmac_sha1,
             preceding_message_bytes,
@@ -415,7 +429,7 @@ impl MessageIntegrity {
         password: &str,
     ) -> std::result::Result<(), ErrorCode> {
         let key = password.as_bytes();
-        let expected = hmac_sha1(key, &self.preceding_message_bytes);
+        let expected = Self::generate_hmac_token(key, &self.preceding_message_bytes);
         if self.hmac_sha1 == expected {
             Ok(())
         } else {
@@ -432,7 +446,7 @@ impl MessageIntegrity {
     ) -> std::result::Result<(), ErrorCode> {
         let key =
             md5::compute(format!("{}:{}:{}", username.name(), realm.text(), password).as_bytes());
-        let expected = hmac_sha1(&key.0[..], &self.preceding_message_bytes);
+        let expected = Self::generate_hmac_token(&key.0[..], &self.preceding_message_bytes);
         if self.hmac_sha1 == expected {
             Ok(())
         } else {
