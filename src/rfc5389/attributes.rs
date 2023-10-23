@@ -379,12 +379,12 @@ impl MessageIntegrity {
     /// utility function for creating HMAC-SHA1 signatures
     fn generate_hmac_token(key: &[u8], message: &[u8]) -> [u8; 20] {
         // Create the hasher with the key. We can use expect for Hmac algorithms as they allow arbitrary key sizes.
-        let mut hasher: Hmac<Sha1> = Mac::new_from_slice(key)
-             .expect("HMAC algoritms can take keys of any size");
-    
+        let mut hasher: Hmac<Sha1> =
+            Mac::new_from_slice(key).expect("HMAC algoritms can take keys of any size");
+
         // hash the message
         hasher.update(message);
-    
+
         // finalize the hash and convert to a static array
         hasher.finalize().into_bytes().into()
     }
