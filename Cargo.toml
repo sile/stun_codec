@@ -18,6 +18,7 @@ coveralls = {repository = "sile/stun_codec"}
 bytecodec = "0.4"
 byteorder = "1"
 crc = "3"
-hmac-sha1 = "0.1"
+hmac = "0.12.1"
 md5 = "0.7"
+sha1 = "0.10.6"
 trackable = "1"
