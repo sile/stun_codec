@@ -90,7 +90,7 @@ impl ChannelNumber {
     pub const MIN: u16 = 0x4000;
 
     /// Maximum channel number.
-    pub const MAX: u16 = 0x7FFF;
+    pub const MAX: u16 = 0x4FFF;
 
     /// Makes a new `ChannelNumber` instance.
     ///
@@ -643,3 +643,17 @@ impl_encode!(
     ReservationToken,
     |item: Self::Item| item.0
 );
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn first_byte_of_channel_number_is_in_range() {
+        let range = 64..=79;
+
+        // As per <https://www.rfc-editor.org/rfc/rfc8656#name-channels-2>.
+        assert!(range.contains(&ChannelNumber::MIN.to_be_bytes()[0]));
+        assert!(range.contains(&ChannelNumber::MAX.to_be_bytes()[0]));
+    }
+}
