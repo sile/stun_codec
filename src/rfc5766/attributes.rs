@@ -11,6 +11,7 @@ use bytecodec::fixnum::{
 };
 use bytecodec::null::{NullDecoder, NullEncoder};
 use bytecodec::{ByteCount, Decode, Encode, Eos, ErrorKind, Result, SizedEncode, TryTaggedDecode};
+use std::fmt;
 use std::net::SocketAddr;
 use std::time::Duration;
 
@@ -135,6 +136,12 @@ impl Attribute for ChannelNumber {
 
     fn get_type(&self) -> AttributeType {
         AttributeType::new(Self::CODEPOINT)
+    }
+}
+
+impl fmt::Display for ChannelNumber {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
     }
 }
 
