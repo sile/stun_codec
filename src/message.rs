@@ -262,7 +262,7 @@ impl BrokenMessage {
 }
 impl From<BrokenMessage> for Error {
     fn from(f: BrokenMessage) -> Self {
-        ErrorKind::InvalidInput.cause(format!("{:?}", f)).into()
+        ErrorKind::InvalidInput.cause(format!("{f:?}")).into()
     }
 }
 

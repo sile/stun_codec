@@ -33,7 +33,7 @@ impl fmt::Debug for TransactionId {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "TransactionId(0x")?;
         for b in self.as_ref() {
-            write!(f, "{:02X}", b)?;
+            write!(f, "{b:02X}")?;
         }
         write!(f, ")")?;
         Ok(())
