@@ -15,7 +15,7 @@ edition = "2021"
 coveralls = {repository = "sile/stun_codec"}
 
 [dependencies]
-bytecodec = "0.4"
+bytecodec = "0.5"
 byteorder = "1"
 crc = "3"
 hmac = "0.12.1"
