@@ -11,9 +11,6 @@ categories = ["encoding"]
 license = "MIT"
 edition = "2021"
 
-[badges]
-coveralls = {repository = "sile/stun_codec"}
-
 [dependencies]
 bytecodec = "0.5"
 byteorder = "1"
