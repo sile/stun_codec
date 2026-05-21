@@ -7,12 +7,14 @@ use std::fmt;
 
 use crate::{rfc5389, rfc5766};
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum MyAttribute {
     Rfc5389(rfc5389::Attribute),
     Rfc5766(rfc5766::Attribute),
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Default)]
 pub struct MyAttributeDecoder {
     rfc5389: rfc5389::AttributeDecoder,
@@ -73,6 +75,7 @@ impl TryTaggedDecode for MyAttributeDecoder {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Default)]
 pub struct MyAttributeEncoder {
     rfc5389: rfc5389::AttributeEncoder,
